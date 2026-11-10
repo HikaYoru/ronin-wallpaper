@@ -1,0 +1,14 @@
+{
+  "AppVersion": "1.0.0.0",
+  "Title": "Ronin",
+  "Thumbnail": "thumbnail.jpg",
+  "Preview": null,
+  "Desc": "Dark wuxia wallpaper: falling snow, drifting mist, gold embers, a carved-serif clock and rotating proverbs. Drop your own art into the images folder.",
+  "Author": "HikaYoru",
+  "License": "Unlicense (public domain)",
+  "Contact": "https://github.com/HikaYoru/ronin-wallpaper",
+  "Type": 2,
+  "FileName": "index.html",
+  "Arguments": null,
+  "IsAbsolutePath": false
+}

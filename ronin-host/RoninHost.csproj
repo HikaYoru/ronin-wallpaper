@@ -1,0 +1,47 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <OutputType>WinExe</OutputType>
+    <!-- the Windows 10 SDK target gives us the WinRT media-session API (now playing) -->
+    <TargetFramework>net8.0-windows10.0.19041.0</TargetFramework>
+    <SupportedOSPlatformVersion>10.0.19041.0</SupportedOSPlatformVersion>
+    <UseWindowsForms>true</UseWindowsForms>
+    <Nullable>enable</Nullable>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <ApplicationHighDpiMode>PerMonitorV2</ApplicationHighDpiMode>
+    <ApplicationManifest>app.manifest</ApplicationManifest>
+    <AssemblyName>RoninHost</AssemblyName>
+    <RootNamespace>RoninHost</RootNamespace>
+    <Product>Ronin Host</Product>
+    <Version>0.8.0</Version>
+    <!-- smaller, steadier memory for a long-running background app -->
+    <ServerGarbageCollector>false</ServerGarbageCollector>
+    <ConcurrentGarbageCollection>false</ConcurrentGarbageCollection>
+    <TieredPGO>true</TieredPGO>
+    <SatelliteResourceLanguages>en</SatelliteResourceLanguages>
+    <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
+    <!-- harmless: the WebView2 package also ships a WPF control we don't use -->
+    <NoWarn>$(NoWarn);MSB3277</NoWarn>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <PackageReference Include="Microsoft.Web.WebView2" Version="1.0.2903.40" />
+    <PackageReference Include="NAudio.Wasapi" Version="2.2.1" />
+    <PackageReference Include="Vortice.Direct2D1" Version="3.8.3" />
+    <PackageReference Include="Vortice.Direct3D11" Version="3.8.3" />
+    <PackageReference Include="Vortice.DirectComposition" Version="3.8.3" />
+    <PackageReference Include="Vortice.MediaFoundation" Version="3.8.3" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <EmbeddedResource Include="settings.html" LogicalName="settings.html" />
+    <EmbeddedResource Include="tasks.html" LogicalName="tasks.html" />
+    <!-- host-only settings (widgets, panorama...) shown after the wallpaper's own LivelyProperties.json -->
+    <EmbeddedResource Include="extras.json" LogicalName="extras.json" />
+    <!-- the widgets for the web renderer, injected into the original page next to the bridge -->
+    <EmbeddedResource Include="web-widgets.js" LogicalName="web-widgets.js" />
+    <!-- the wallpaper's fonts for the native renderer (SIL Open Font License, see fonts\OFL-*.txt) -->
+    <None Include="fonts\**" CopyToOutputDirectory="PreserveNewest" />
+  </ItemGroup>
+
+</Project>

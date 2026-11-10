@@ -1,0 +1,25 @@
+{
+  "theme": "",
+  "styleConstants": [""],
+  "controlStyles": [
+    {
+      "target": "Rectangle#BackgroundFill",
+      "styles": ["Fill=#B30F1012"]
+    },
+    {
+      "target": "Rectangle#BackgroundStroke",
+      "styles": ["Fill=#C9A24A", "Opacity=0.55"]
+    },
+    {
+      "target": "Rectangle#RunningIndicator",
+      "styles": ["Fill=#C9A24A"]
+    },
+    {
+      "target": "Taskbar.TaskListButton > Taskbar.TaskListLabeledButtonPanel > Border#BackgroundElement",
+      "styles": ["CornerRadius=3"]
+    }
+  ],
+  "themeResourceVariables": [""],
+  "clickThroughTaskbar": 0,
+  "xamlDiagnosticsHandling": "alert"
+}

@@ -1,0 +1,102 @@
+{
+  "title": "Ronin",
+  "description": "Dark wuxia wallpaper: snow or rain (or your real local weather), mist, gold embers, time-of-day lighting, a gold ink line that moves with your music, a carved-serif clock, proverbs and a to-do list.",
+  "file": "index.html",
+  "preview": "preview.jpg",
+  "type": "web",
+  "tags": ["Fantasy", "Anime"],
+  "general": {
+    "supportsaudioprocessing": true,
+    "properties": {
+      "schemecolor": { "order": 0, "text": "ui_browse_properties_scheme_color", "type": "color", "value": "0.788 0.635 0.290" },
+
+      "customimage": { "order": 10, "text": "Your own background image (empty = built-in)", "type": "file", "fileType": "image", "value": "" },
+      "dim": { "order": 20, "text": "Darken background", "type": "slider", "min": 0, "max": 80, "step": 1, "value": 15, "editable": true },
+      "desaturate": { "order": 30, "text": "Desaturate background", "type": "slider", "min": 0, "max": 100, "step": 1, "value": 30, "editable": true },
+
+      "liveweather": { "order": 90, "text": "Use my real local weather", "type": "bool", "value": false },
+      "city": { "order": 91, "text": "City (e.g. Seattle or Paris, France)", "type": "textinput", "value": "", "condition": "liveweather.value == true" },
+      "units": {
+        "order": 92, "text": "Temperature", "type": "combo", "value": "0", "condition": "liveweather.value == true",
+        "options": [ { "label": "Celsius", "value": "0" }, { "label": "Fahrenheit", "value": "1" } ]
+      },
+      "showweather": { "order": 93, "text": "Show weather under the date", "type": "bool", "value": true, "condition": "liveweather.value == true" },
+
+      "precip": {
+        "order": 100, "text": "Weather (when not live)", "type": "combo", "value": "0",
+        "options": [ { "label": "Snow", "value": "0" }, { "label": "Rain", "value": "1" }, { "label": "Clear", "value": "2" } ]
+      },
+      "snow": { "order": 101, "text": "Snow / rain amount", "type": "slider", "min": 0, "max": 100, "step": 1, "value": 45, "editable": true },
+      "wind": { "order": 110, "text": "Wind (left / right)", "type": "slider", "min": -100, "max": 100, "step": 1, "value": 25, "editable": true },
+      "fog": { "order": 120, "text": "Mist", "type": "slider", "min": 0, "max": 100, "step": 1, "value": 40, "editable": true },
+      "lightning": { "order": 125, "text": "Distant lightning", "type": "bool", "value": false },
+      "embers": { "order": 130, "text": "Gold embers", "type": "slider", "min": 0, "max": 100, "step": 1, "value": 35, "editable": true },
+      "parallax": { "order": 150, "text": "Mouse parallax", "type": "bool", "value": true },
+      "vignette": { "order": 160, "text": "Vignette", "type": "slider", "min": 0, "max": 100, "step": 1, "value": 60, "editable": true },
+      "grain": { "order": 170, "text": "Film grain", "type": "bool", "value": true },
+
+      "timeofday": { "order": 180, "text": "Time-of-day lighting", "type": "bool", "value": true },
+      "todstrength": { "order": 181, "text": "Time-of-day strength", "type": "slider", "min": 0, "max": 100, "step": 1, "value": 60, "editable": true, "condition": "timeofday.value == true" },
+
+      "viz": { "order": 190, "text": "Music ink line", "type": "bool", "value": true },
+      "vizsensitivity": { "order": 191, "text": "Ink line sensitivity", "type": "slider", "min": 10, "max": 300, "step": 5, "value": 100, "editable": true, "condition": "viz.value == true" },
+      "vizheight": { "order": 192, "text": "Ink line wave height", "type": "slider", "min": 10, "max": 300, "step": 5, "value": 70, "editable": true, "condition": "viz.value == true" },
+      "vizthickness": { "order": 193, "text": "Ink line thickness", "type": "slider", "min": 1, "max": 6, "step": 0.5, "precision": 1, "value": 2, "editable": true, "condition": "viz.value == true" },
+      "vizy": { "order": 194, "text": "Ink line height from bottom", "type": "slider", "min": 0, "max": 90, "step": 1, "value": 6, "editable": true, "condition": "viz.value == true" },
+      "vizreact": { "order": 195, "text": "Embers pulse with the bass", "type": "bool", "value": true },
+
+      "accent": { "order": 200, "text": "Accent color", "type": "color", "value": "0.788 0.635 0.290" },
+      "textcolor": { "order": 210, "text": "Text color", "type": "color", "value": "0.851 0.839 0.812" },
+
+      "showclock": { "order": 300, "text": "Show clock", "type": "bool", "value": true },
+      "clock24": { "order": 310, "text": "24-hour clock", "type": "bool", "value": false, "condition": "showclock.value == true" },
+      "showdate": { "order": 320, "text": "Show date", "type": "bool", "value": true },
+      "position": {
+        "order": 330, "text": "Clock position", "type": "combo", "value": "0",
+        "options": [
+          { "label": "Top right", "value": "0" },
+          { "label": "Top left", "value": "1" },
+          { "label": "Bottom right", "value": "2" },
+          { "label": "Bottom left", "value": "3" },
+          { "label": "Center", "value": "4" },
+          { "label": "Custom (use sliders)", "value": "5" }
+        ]
+      },
+      "clockx": { "order": 331, "text": "Clock left / right", "type": "slider", "min": 0, "max": 100, "step": 1, "value": 100, "editable": true, "condition": "position.value == 5" },
+      "clocky": { "order": 332, "text": "Clock up / down", "type": "slider", "min": 0, "max": 100, "step": 1, "value": 0, "editable": true, "condition": "position.value == 5" },
+      "font": {
+        "order": 340, "text": "Font", "type": "combo", "value": "0",
+        "options": [
+          { "label": "Cinzel (carved)", "value": "0" },
+          { "label": "Cormorant (elegant)", "value": "1" },
+          { "label": "Shippori Mincho (brush)", "value": "2" }
+        ]
+      },
+      "uiscale": { "order": 350, "text": "Overall size", "type": "slider", "min": 25, "max": 300, "step": 5, "value": 100, "editable": true },
+      "guides": { "order": 360, "text": "Show layout outlines (while arranging)", "type": "bool", "value": false },
+
+      "showquote": { "order": 400, "text": "Show quote", "type": "bool", "value": true },
+      "quotetext": { "order": 410, "text": "Your own quote (empty = rotating proverbs)", "type": "textinput", "value": "", "condition": "showquote.value == true" },
+      "quotescale": { "order": 411, "text": "Quote size", "type": "slider", "min": 50, "max": 250, "step": 5, "value": 100, "editable": true },
+      "quotewidth": { "order": 412, "text": "Quote max width", "type": "slider", "min": 10, "max": 60, "step": 1, "value": 30, "editable": true },
+      "quotelayout": {
+        "order": 413, "text": "Quote placement", "type": "combo", "value": "0",
+        "options": [
+          { "label": "Under the clock", "value": "0" },
+          { "label": "On its own (use sliders)", "value": "1" }
+        ]
+      },
+      "quotex": { "order": 414, "text": "Quote left / right", "type": "slider", "min": 0, "max": 100, "step": 1, "value": 50, "editable": true, "condition": "quotelayout.value == 1" },
+      "quotey": { "order": 415, "text": "Quote up / down", "type": "slider", "min": 0, "max": 100, "step": 1, "value": 92, "editable": true, "condition": "quotelayout.value == 1" },
+      "quoteminutes": { "order": 420, "text": "Change proverb every (minutes)", "type": "slider", "min": 1, "max": 60, "step": 1, "value": 10, "editable": true, "condition": "showquote.value == true" },
+      "showmusic": { "order": 430, "text": "Show now playing (needs Media Integration on)", "type": "bool", "value": true },
+
+      "showtodo": { "order": 500, "text": "Show to-do list", "type": "bool", "value": true },
+      "todotitle": { "order": 501, "text": "To-do title", "type": "textinput", "value": "Tasks", "condition": "showtodo.value == true" },
+      "todotext": { "order": 502, "text": "To-do items, separated by ;  (click an item on the desktop to tick it)", "type": "textinput", "value": "", "condition": "showtodo.value == true" },
+      "todox": { "order": 503, "text": "To-do left / right", "type": "slider", "min": 0, "max": 100, "step": 1, "value": 0, "editable": true, "condition": "showtodo.value == true" },
+      "todoy": { "order": 504, "text": "To-do up / down", "type": "slider", "min": 0, "max": 100, "step": 1, "value": 55, "editable": true, "condition": "showtodo.value == true" },
+      "todoscale": { "order": 505, "text": "To-do size", "type": "slider", "min": 50, "max": 250, "step": 5, "value": 100, "editable": true, "condition": "showtodo.value == true" }
+    }
+  }
+}

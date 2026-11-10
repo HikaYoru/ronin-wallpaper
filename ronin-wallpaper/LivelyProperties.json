@@ -1,0 +1,76 @@
+{
+  "background": {
+    "type": "folderDropdown",
+    "value": "ink-mountains.jpg",
+    "text": "Background image",
+    "filter": "*.jpg|*.jpeg|*.png|*.webp|*.gif",
+    "folder": "images"
+  },
+  "dim": { "type": "slider", "value": 15, "text": "Darken background", "min": 0, "max": 80, "step": 1 },
+  "desaturate": { "type": "slider", "value": 30, "text": "Desaturate background", "min": 0, "max": 100, "step": 1 },
+
+  "liveWeather": { "type": "checkbox", "value": false, "text": "Use my real local weather" },
+  "city": { "type": "textbox", "value": "", "text": "City (e.g. Seattle or Paris, France)" },
+  "units": { "type": "dropdown", "value": 0, "text": "Temperature", "items": [ "Celsius", "Fahrenheit" ] },
+  "showWeather": { "type": "checkbox", "value": true, "text": "Show weather under the date" },
+
+  "precip": { "type": "dropdown", "value": 0, "text": "Weather (when not live)", "items": [ "Snow", "Rain", "Clear" ] },
+  "snow": { "type": "slider", "value": 45, "text": "Snow / rain amount", "min": 0, "max": 100, "step": 1 },
+  "wind": { "type": "slider", "value": 25, "text": "Wind (left / right)", "min": -100, "max": 100, "step": 1 },
+  "fog": { "type": "slider", "value": 40, "text": "Mist", "min": 0, "max": 100, "step": 1 },
+  "lightning": { "type": "checkbox", "value": false, "text": "Distant lightning" },
+  "embers": { "type": "slider", "value": 35, "text": "Gold embers", "min": 0, "max": 100, "step": 1 },
+  "parallax": { "type": "checkbox", "value": true, "text": "Mouse parallax" },
+  "vignette": { "type": "slider", "value": 60, "text": "Vignette", "min": 0, "max": 100, "step": 1 },
+  "grain": { "type": "checkbox", "value": true, "text": "Film grain" },
+
+  "timeOfDay": { "type": "checkbox", "value": true, "text": "Time-of-day lighting" },
+  "todStrength": { "type": "slider", "value": 60, "text": "Time-of-day strength", "min": 0, "max": 100, "step": 1 },
+
+  "viz": { "type": "checkbox", "value": true, "text": "Music ink line" },
+  "vizSensitivity": { "type": "slider", "value": 100, "text": "Ink line sensitivity", "min": 10, "max": 300, "step": 5 },
+  "vizHeight": { "type": "slider", "value": 70, "text": "Ink line wave height", "min": 10, "max": 300, "step": 5 },
+  "vizThickness": { "type": "slider", "value": 2, "text": "Ink line thickness", "min": 1, "max": 6, "step": 0.5 },
+  "vizY": { "type": "slider", "value": 6, "text": "Ink line height from bottom", "min": 0, "max": 90, "step": 1 },
+  "vizReact": { "type": "checkbox", "value": true, "text": "Embers pulse with the bass" },
+
+  "accent": { "type": "color", "value": "#c9a24a", "text": "Accent color" },
+  "textColor": { "type": "color", "value": "#d9d6cf", "text": "Text color" },
+
+  "showClock": { "type": "checkbox", "value": true, "text": "Show clock" },
+  "clock24": { "type": "checkbox", "value": false, "text": "24-hour clock" },
+  "showDate": { "type": "checkbox", "value": true, "text": "Show date" },
+  "position": {
+    "type": "dropdown",
+    "value": 0,
+    "text": "Clock position",
+    "items": [ "Top right", "Top left", "Bottom right", "Bottom left", "Center", "Custom (use sliders)" ]
+  },
+  "clockX": { "type": "slider", "value": 100, "text": "Custom: clock left / right", "min": 0, "max": 100, "step": 1 },
+  "clockY": { "type": "slider", "value": 0, "text": "Custom: clock up / down", "min": 0, "max": 100, "step": 1 },
+  "font": {
+    "type": "dropdown",
+    "value": 0,
+    "text": "Font",
+    "items": [ "Cinzel (carved)", "Cormorant (elegant)", "Shippori Mincho (brush)" ]
+  },
+  "uiScale": { "type": "slider", "value": 100, "text": "Overall size", "min": 25, "max": 300, "step": 5 },
+  "guides": { "type": "checkbox", "value": false, "text": "Show layout outlines (while arranging)" },
+
+  "showQuote": { "type": "checkbox", "value": true, "text": "Show quote" },
+  "quoteText": { "type": "textbox", "value": "", "text": "Your own quote (empty = rotating proverbs)" },
+  "quoteScale": { "type": "slider", "value": 100, "text": "Quote size", "min": 50, "max": 250, "step": 5 },
+  "quoteWidth": { "type": "slider", "value": 30, "text": "Quote max width", "min": 10, "max": 60, "step": 1 },
+  "quoteLayout": { "type": "dropdown", "value": 0, "text": "Quote placement", "items": [ "Under the clock", "On its own (use sliders)" ] },
+  "quoteX": { "type": "slider", "value": 50, "text": "Own: quote left / right", "min": 0, "max": 100, "step": 1 },
+  "quoteY": { "type": "slider", "value": 92, "text": "Own: quote up / down", "min": 0, "max": 100, "step": 1 },
+  "quoteMinutes": { "type": "slider", "value": 10, "text": "Change proverb every (minutes)", "min": 1, "max": 60, "step": 1 },
+  "showMusic": { "type": "checkbox", "value": true, "text": "Show now playing" },
+
+  "showTodo": { "type": "checkbox", "value": true, "text": "Show to-do list" },
+  "todoTitle": { "type": "textbox", "value": "Tasks", "text": "To-do title" },
+  "todoText": { "type": "textbox", "value": "", "text": "To-do items, separated by ;" },
+  "todoX": { "type": "slider", "value": 0, "text": "To-do left / right", "min": 0, "max": 100, "step": 1 },
+  "todoY": { "type": "slider", "value": 55, "text": "To-do up / down", "min": 0, "max": 100, "step": 1 },
+  "todoScale": { "type": "slider", "value": 100, "text": "To-do size", "min": 50, "max": 250, "step": 5 }
+}

@@ -1,0 +1,413 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Ronin — Tasks</title>
+<style>
+  :root {
+    --bg: #141618; --panel: #1b1d20; --row: #191b1e; --line: #2a2c30; --text: #e6e0d2; --dim: #8f8a80; --faint: #5d5a54;
+    --gold: #c9a24a; --gold-dim: #7d6630; --wip: #c9a24a; --done: #7f9a6b; --none: #6d6a64;
+    --serif: 'Cinzel', Georgia, serif; --body: 'Segoe UI Variable Text', 'Segoe UI', sans-serif; --book: 'Cormorant Garamond', Georgia, serif;
+  }
+  * { box-sizing: border-box; }
+  html, body { margin: 0; background: var(--bg); color: var(--text); font: 13px/1.45 var(--body); height: 100%; }
+  body { user-select: none; display: flex; flex-direction: column; }
+  ::-webkit-scrollbar { width: 10px; } ::-webkit-scrollbar-thumb { background: #2c2e32; border-radius: 5px; border: 2px solid var(--bg); }
+  input, textarea, select { font: inherit; color: var(--text); background: transparent; border: 1px solid transparent; outline: none; }
+  input:focus, textarea:focus { border-color: var(--gold-dim); background: #111214; }
+  button { font: inherit; color: var(--dim); background: none; border: 1px solid var(--line); cursor: pointer; padding: 4px 10px; }
+  button:hover { color: var(--gold); border-color: var(--gold-dim); }
+  .ico { border: 0; padding: 2px 6px; color: var(--faint); font-size: 14px; }
+  .ico:hover { color: var(--gold); }
+  .caps { font: 11px var(--serif); letter-spacing: .25em; text-transform: uppercase; }
+
+  /* ---------- top bar (board mode) ---------- */
+  header { padding: 16px 22px 10px; display: flex; align-items: baseline; gap: 14px; }
+  header h1 { margin: 0; font: 600 20px var(--serif); letter-spacing: .32em; }
+  header h1 b { color: var(--gold); font-weight: 600; }
+  .tabs { display: flex; flex-wrap: wrap; gap: 6px; padding: 0 22px 10px; border-bottom: 1px solid var(--line); }
+  .tab { padding: 5px 12px; border: 1px solid var(--line); color: var(--dim); cursor: pointer; font: 11px var(--serif); letter-spacing: .18em; text-transform: uppercase; }
+  .tab.on { color: var(--bg); background: var(--gold); border-color: var(--gold); }
+  .tab:hover:not(.on) { color: var(--gold); border-color: var(--gold-dim); }
+  .tab.drop { outline: 1px dashed var(--gold); }
+
+  .boardbar { display: flex; align-items: center; gap: 10px; padding: 12px 22px 6px; flex-wrap: wrap; }
+  .boardbar .name { font: 600 17px var(--serif); letter-spacing: .12em; field-sizing: content; min-width: 160px; max-width: 100%; padding: 3px 6px; }
+  .boardbar .name + .mons { flex-basis: 100%; }
+  .mons { display: flex; gap: 6px; align-items: center; }
+  .chip { font-size: 11px; padding: 3px 9px; border: 1px solid var(--line); color: var(--dim); cursor: pointer; }
+  .chip.on { color: var(--gold); border-color: var(--gold-dim); background: #1f1c15; }
+  .spacer { flex: 1; }
+
+  .quick { padding: 6px 22px 8px; }
+  .quick input { width: 100%; padding: 8px 10px; border: 1px solid var(--line); background: #111214; }
+  .quick input::placeholder { color: var(--faint); }
+
+  #list { flex: 1; overflow-y: auto; padding: 4px 14px 20px; }
+
+  /* ---------- rows ---------- */
+  .row { display: flex; align-items: center; gap: 10px; padding: 3px 8px; border: 1px solid transparent; min-height: 34px; }
+  .row:hover { background: var(--row); }
+  .row.dragging { opacity: .35; }
+  .row.over-top { border-top-color: var(--gold); } .row.over-bottom { border-bottom-color: var(--gold); }
+  .grip { color: var(--faint); cursor: grab; font-size: 12px; width: 12px; text-align: center; visibility: hidden; }
+  .row:hover .grip { visibility: visible; }
+  .row .title { flex: 1; min-width: 60px; padding: 3px 6px; }
+  .row .tools { display: flex; gap: 2px; visibility: hidden; }
+  .row:hover .tools, .row.open .tools { visibility: visible; }
+  .row .marks { color: var(--faint); font-size: 12px; display: flex; gap: 8px; align-items: center; }
+  .row .marks .full { color: var(--done); }
+
+  .head { margin-top: 14px; border-bottom: 1px solid #26282b; }
+  .head .fold { color: var(--gold); cursor: pointer; width: 14px; text-align: center; }
+  .head .title { font: 12px var(--serif); letter-spacing: .3em; text-transform: uppercase; color: var(--gold); }
+  .head .count { font: 11px var(--serif); letter-spacing: .1em; color: var(--dim); }
+  .task { padding-left: 24px; }
+  .task .title { font: 19px var(--book); }
+  .task.done .title { color: var(--dim); text-decoration: line-through; text-decoration-color: var(--gold-dim); }
+
+  /* status: click to cycle (Not started -> In progress -> Done) */
+  .status { display: inline-flex; align-items: center; gap: 6px; padding: 2px 9px 2px 7px; border-radius: 10px; font-size: 11px; cursor: pointer; white-space: nowrap; border: 1px solid transparent; }
+  .status i { width: 7px; height: 7px; transform: rotate(45deg); border: 1px solid currentColor; }
+  .status.s0 { color: #a8a39a; background: #26272a; }
+  .status.s1 { color: var(--wip); background: #2a2417; } .status.s1 i { background: currentColor; box-shadow: 0 0 6px currentColor; }
+  .status.s2 { color: #a9c294; background: #1f2a1d; } .status.s2 i { background: currentColor; }
+  .status:hover { border-color: currentColor; }
+
+  /* ---------- details (inline in the board, the whole page in panel mode) ---------- */
+  .details { margin: 2px 8px 10px 46px; padding: 10px 14px 12px; background: var(--panel); border: 1px solid var(--line); }
+  .lab { font: 10px var(--serif); letter-spacing: .28em; text-transform: uppercase; color: var(--dim); margin: 12px 0 6px; display: flex; align-items: center; gap: 10px; }
+  .lab:first-child { margin-top: 0; }
+  .lab span { flex: 1; height: 1px; background: linear-gradient(to right, var(--gold-dim), transparent); }
+  textarea.notes { width: 100%; min-height: 90px; resize: vertical; padding: 8px 10px; border: 1px solid var(--line); background: #111214; font: 15px/1.5 var(--book); user-select: text; }
+  .subs .sub { display: flex; align-items: center; gap: 8px; padding: 2px 0; }
+  .subs .sub input.t { flex: 1; padding: 3px 6px; }
+  .subs .sub.done input.t { color: var(--dim); text-decoration: line-through; }
+  .check { width: 16px; height: 16px; border: 1px solid var(--gold-dim); cursor: pointer; display: grid; place-items: center; flex: none; }
+  .check.on { background: var(--gold); border-color: var(--gold); }
+  .check.on::after { content: ''; width: 7px; height: 4px; border: solid var(--bg); border-width: 0 0 1.5px 1.5px; transform: rotate(-45deg) translate(1px, -1px); }
+  .subs .add input { width: 100%; padding: 5px 8px; border: 1px dashed var(--line); }
+  .subs .add input::placeholder { color: var(--faint); }
+  .meta { color: var(--faint); font-size: 11px; margin-top: 12px; display: flex; gap: 14px; align-items: center; }
+  .meta .spacer { flex: 1; }
+  .danger:hover, .armed { color: #d98a7a !important; border-color: #6e3a32 !important; }
+
+  /* ---------- panel mode ---------- */
+  body.panel { padding: 16px 18px 14px; }
+  body.panel .ptitle { width: 100%; font: 24px/1.2 var(--book); padding: 4px 6px; margin-bottom: 8px; }
+  body.panel .board { color: var(--dim); font-size: 11px; margin-bottom: 10px; display: flex; gap: 8px; align-items: center; flex-wrap: wrap; }
+  body.panel select { border: 1px solid var(--line); background: #111214; padding: 3px 6px; max-width: 170px; }
+  .seg { display: flex; gap: 6px; }
+  .seg .status { flex: 1; justify-content: center; padding: 5px 8px; opacity: .55; }
+  .seg .status.on { opacity: 1; border-color: currentColor; }
+  body.panel .scroll { flex: 1; overflow-y: auto; padding-right: 4px; }
+  .hint { color: var(--faint); font-size: 11px; }
+  .empty { color: var(--faint); padding: 30px; text-align: center; font: 16px var(--book); }
+</style>
+</head>
+<body>
+<script>
+const wv = window.chrome.webview;
+const send = m => wv.postMessage(m);
+const esc = s => String(s ?? '').replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
+const STATUS = ['Not started', 'In progress', 'Done'];
+let state = null;        // {mode, data:{boards}, monitors:[{id,name}], board, item}
+let current = null;      // board id shown (board mode)
+let openItem = null;     // task expanded inline (board mode)
+let reqN = 0; const pending = {};
+
+// an operation for the host's TaskStore; resolves with the new id for "add" operations
+function op(o) { const req = ++reqN; send(Object.assign({ t: 'op', req }, o)); return new Promise(r => { pending[req] = r; }); }
+
+wv.addEventListener('message', e => {
+  const m = e.data;
+  if (m.t === 'init') { state = m; if (m.mode === 'board' && !current) current = m.board || (m.data.boards[0] || {}).id; render(); }
+  else if (m.t === 'data' && state) { state.data = m.data; if (m.monitors) state.monitors = m.monitors; render(); }
+  else if (m.t === 'res' && pending[m.req]) { pending[m.req](m.id); delete pending[m.req]; }
+  else if (m.t === 'show' && state) { current = m.board || current; openItem = m.item || openItem; render(); }
+});
+
+const boardById = id => (state.data.boards || []).find(b => b.id === id);
+function findItem(itemId) { for (const b of state.data.boards || []) { const i = b.items.find(x => x.id === itemId); if (i) return [b, i]; } return [null, null]; }
+
+// ---- re-rendering without losing what you're typing: keep the focused field's text, caret and scroll ----
+function keep(fn) {
+  const a = document.activeElement, key = a && a.dataset && a.dataset.key;
+  const val = key && 'value' in a ? a.value : null, s0 = a && a.selectionStart, s1 = a && a.selectionEnd;
+  const scrollers = [...document.querySelectorAll('[data-scroll]')].map(el => [el.dataset.scroll, el.scrollTop]);
+  fn();
+  for (const [k, top] of scrollers) { const el = document.querySelector(`[data-scroll="${k}"]`); if (el) el.scrollTop = top; }
+  if (key) {
+    const n = document.querySelector(`[data-key="${CSS.escape(key)}"]`);
+    if (n) { if (val !== null) n.value = val; n.focus(); try { n.setSelectionRange(s0, s1); } catch (e) {} }
+  }
+}
+
+function render() {
+  if (!state) return;
+  keep(() => {
+    document.body.innerHTML = '';
+    document.body.className = state.mode === 'panel' ? 'panel' : '';
+    if (state.mode === 'panel') renderPanel(); else renderBoard();
+  });
+}
+
+// deleting asks twice in place (no pop-up dialogs: they would close the task panel)
+function twoStep(btn, action, label) {
+  const text = btn.textContent;
+  btn.onclick = e => {
+    e.stopPropagation();
+    if (btn.dataset.armed) { action(); return; }
+    btn.dataset.armed = '1'; btn.textContent = label || 'Sure? Click again'; btn.classList.add('armed');
+    setTimeout(() => { if (btn.isConnected) { delete btn.dataset.armed; btn.textContent = text; btn.classList.remove('armed'); } }, 3000);
+  };
+  return btn;
+}
+
+function el(tag, cls, html) { const e = document.createElement(tag); if (cls) e.className = cls; if (html !== undefined) e.innerHTML = html; return e; }
+
+function statusPill(item, onClick) {
+  const s = el('span', 'status s' + item.status, `<i></i>${STATUS[item.status]}`);
+  s.title = 'Click: ' + STATUS[(item.status + 1) % 3];
+  s.onclick = e => { e.stopPropagation(); onClick ? onClick() : op({ op: 'item.cycle', board: boardOf(item), item: item.id }); };
+  return s;
+}
+const boardOf = item => (findItem(item.id)[0] || {}).id;
+
+function textInput(cls, value, key, onCommit, placeholder) {
+  const i = el('input', cls); i.value = value; i.dataset.key = key; if (placeholder) i.placeholder = placeholder; i.spellcheck = false;
+  i.onkeydown = e => { if (e.key === 'Enter') { i.blur(); } if (e.key === 'Escape') { i.value = value; i.blur(); } };
+  i.onchange = () => onCommit(i.value);
+  return i;
+}
+
+// ---------------- details: notes and sub-tasks (inline in the board, and the panel) ----------------
+function details(b, item, opts = {}) {
+  const d = el('div', opts.panel ? '' : 'details');
+  d.appendChild(el('div', 'lab', 'Notes<span></span>'));
+  const notes = el('textarea', 'notes'); notes.value = item.notes || ''; notes.dataset.key = 'notes:' + item.id;
+  notes.placeholder = 'Anything about this task…'; notes.spellcheck = true;
+  let tm; notes.oninput = () => { clearTimeout(tm); tm = setTimeout(() => op({ op: 'item.update', board: b.id, item: item.id, notes: notes.value }), 350); };
+  notes.onblur = () => { clearTimeout(tm); if (notes.value !== (item.notes || '')) op({ op: 'item.update', board: b.id, item: item.id, notes: notes.value }); };
+  d.appendChild(notes);
+
+  const subs = item.subtasks || [];
+  const doneN = subs.filter(s => s.done).length;
+  d.appendChild(el('div', 'lab', `Sub-tasks${subs.length ? ` &nbsp;${doneN} / ${subs.length}` : ''}<span></span>`));
+  const box = el('div', 'subs');
+  subs.forEach((s, i) => {
+    const r = el('div', 'sub' + (s.done ? ' done' : ''));
+    const c = el('span', 'check' + (s.done ? ' on' : '')); c.onclick = () => op({ op: 'sub.update', board: b.id, item: item.id, sub: s.id, done: !s.done });
+    const t = textInput('t', s.title, 'sub:' + s.id, v => op({ op: 'sub.update', board: b.id, item: item.id, sub: s.id, title: v }));
+    const up = el('button', 'ico', '↑'); up.title = 'Move up'; up.onclick = () => i > 0 && op({ op: 'sub.move', board: b.id, item: item.id, sub: s.id, to: i - 1 });
+    const dn = el('button', 'ico', '↓'); dn.title = 'Move down'; dn.onclick = () => i < subs.length - 1 && op({ op: 'sub.move', board: b.id, item: item.id, sub: s.id, to: i + 1 });
+    const x = el('button', 'ico danger', '✕'); x.title = 'Remove'; x.onclick = () => op({ op: 'sub.delete', board: b.id, item: item.id, sub: s.id });
+    r.append(c, t, up, dn, x);
+    box.appendChild(r);
+  });
+  const add = el('div', 'add');
+  const ai = el('input'); ai.placeholder = '+ Add a sub-task (Enter)'; ai.dataset.key = 'subadd:' + item.id; ai.spellcheck = false;
+  ai.onkeydown = e => { if (e.key === 'Enter' && ai.value.trim()) { const v = ai.value; ai.value = ''; op({ op: 'sub.add', board: b.id, item: item.id, title: v }); } };
+  add.appendChild(ai); box.appendChild(add);
+  d.appendChild(box);
+
+  const meta = el('div', 'meta');
+  meta.appendChild(el('span', '', 'Created ' + new Date(item.created).toLocaleDateString()));
+  if (item.finished) meta.appendChild(el('span', '', 'Done ' + new Date(item.finished).toLocaleDateString()));
+  meta.appendChild(el('span', 'spacer'));
+  const del = el('button', 'danger', 'Delete task');
+  twoStep(del, () => op({ op: 'item.delete', board: b.id, item: item.id }).then(() => { if (opts.panel) send({ t: 'close' }); }), 'Delete? Click again');
+  meta.appendChild(del);
+  d.appendChild(meta);
+  return d;
+}
+
+// ---------------- panel mode: one task, opened from the desktop ----------------
+function renderPanel() {
+  const [b, item] = findItem(state.item);
+  if (!b || !item) { document.body.appendChild(el('div', 'empty', 'This task was deleted.')); return; }
+  const t = textInput('ptitle', item.title, 'title:' + item.id, v => op({ op: 'item.update', board: b.id, item: item.id, title: v }));
+  document.body.appendChild(t);
+
+  const seg = el('div', 'seg');
+  [0, 1, 2].forEach(s => {
+    const p = el('span', 'status s' + s + (item.status === s ? ' on' : ''), `<i></i>${STATUS[s]}`);
+    p.onclick = () => op({ op: 'item.update', board: b.id, item: item.id, status: s });
+    seg.appendChild(p);
+  });
+  document.body.appendChild(seg);
+
+  // where it lives: board and section
+  const where = el('div', 'board');
+  where.style.marginTop = '10px';
+  const bs = el('select'); (state.data.boards || []).forEach(x => { const o = el('option'); o.value = x.id; o.textContent = x.name; bs.appendChild(o); }); bs.value = b.id;
+  bs.onchange = () => op({ op: 'item.toBoard', board: b.id, item: item.id, target: bs.value });
+  const heads = b.items.filter(x => x.kind === 'header');
+  const idx = b.items.indexOf(item);
+  let mine = ''; for (let i = idx - 1; i >= 0; i--) if (b.items[i].kind === 'header') { mine = b.items[i].id; break; }
+  const hs = el('select'); [['', '— no section —']].concat(heads.map(h => [h.id, h.title])).forEach(([v, n]) => { const o = el('option'); o.value = v; o.textContent = n; hs.appendChild(o); }); hs.value = mine;
+  hs.onchange = () => {
+    // move to the end of that section (or the top, before any header)
+    const items = b.items.filter(x => x.id !== item.id);
+    let to;
+    if (!hs.value) { const first = items.findIndex(x => x.kind === 'header'); to = first < 0 ? items.length : first; }
+    else { const h = items.findIndex(x => x.id === hs.value); to = h + 1; while (to < items.length && items[to].kind !== 'header') to++; }
+    op({ op: 'item.move', board: b.id, item: item.id, to });
+  };
+  where.append(el('span', 'caps', 'Board'), bs, el('span', 'caps', 'Section'), hs);
+  document.body.appendChild(where);
+
+  const sc = el('div', 'scroll'); sc.dataset.scroll = 'panel';
+  sc.appendChild(details(b, item, { panel: true }));
+  document.body.appendChild(sc);
+  document.body.appendChild(el('div', 'hint', 'Esc or click elsewhere to close · changes save as you go'));
+}
+
+// ---------------- board mode: the Tasks window ----------------
+let drag = null;
+
+function renderBoard() {
+  const h = el('header', '', `<h1>R<b>O</b>NIN</h1><div class="caps" style="color:var(--dim)">tasks</div>`);
+  document.body.appendChild(h);
+
+  // board tabs (drop a task on a tab to move it to that board)
+  const tabs = el('div', 'tabs');
+  (state.data.boards || []).forEach(b => {
+    const t = el('span', 'tab' + (b.id === current ? ' on' : ''), esc(b.name));
+    t.onclick = () => { current = b.id; openItem = null; render(); };
+    t.ondragover = e => { if (drag && b.id !== current) { e.preventDefault(); t.classList.add('drop'); } };
+    t.ondragleave = () => t.classList.remove('drop');
+    t.ondrop = e => { e.preventDefault(); if (drag) op({ op: 'item.toBoard', board: current, item: drag, target: b.id }); drag = null; };
+    tabs.appendChild(t);
+  });
+  const nb = el('span', 'tab', '+ Board');
+  nb.onclick = () => op({ op: 'board.add', name: 'New board' }).then(id => { current = id; render(); setTimeout(() => { const n = document.querySelector('.boardbar .name'); if (n) { n.focus(); n.select(); } }, 30); });
+  tabs.appendChild(nb);
+  document.body.appendChild(tabs);
+
+  const b = boardById(current);
+  if (!b) { document.body.appendChild(el('div', 'empty', 'No boards yet. Click “+ Board”.')); return; }
+
+  // board name, the monitors it shows on, clear done, delete
+  const bar = el('div', 'boardbar');
+  bar.appendChild(textInput('name', b.name, 'bname:' + b.id, v => op({ op: 'board.rename', board: b.id, name: v })));
+  const mons = el('div', 'mons'); mons.appendChild(el('span', 'caps', 'Shown on'));
+  (state.monitors || []).forEach(m => {
+    const on = b.monitors.includes(m.id);
+    const owner = !on && (state.data.boards || []).find(x => x.monitors.includes(m.id));
+    const c = el('span', 'chip' + (on ? ' on' : ''), esc(m.name));
+    c.title = on ? 'Click to stop showing this board there' : owner ? `Shows “${owner.name}” now; click to show this board instead` : 'Click to show this board there';
+    c.onclick = () => op({ op: 'board.monitors', board: b.id, monitors: on ? b.monitors.filter(x => x !== m.id) : b.monitors.concat(m.id) });
+    mons.appendChild(c);
+  });
+  bar.appendChild(mons);
+  bar.appendChild(el('span', 'spacer'));
+  const clr = el('button', '', 'Clear done'); clr.title = 'Remove finished tasks from this board';
+  twoStep(clr, () => op({ op: 'board.clearDone', board: b.id }), 'Remove finished? Click again');
+  const del = el('button', 'danger', 'Delete board');
+  twoStep(del, () => op({ op: 'board.delete', board: b.id }).then(() => { current = (state.data.boards.find(x => x.id !== b.id) || {}).id; render(); }), `Delete ${b.items.length} items? Click again`);
+  bar.append(clr, del);
+  document.body.appendChild(bar);
+
+  // quick add: "Title" adds a task; "# Title" adds a section header
+  const q = el('div', 'quick');
+  const qi = el('input'); qi.placeholder = 'Add a task and press Enter  ·  start with # for a section header'; qi.dataset.key = 'quick'; qi.spellcheck = false;
+  qi.onkeydown = e => {
+    if (e.key !== 'Enter' || !qi.value.trim()) return;
+    const v = qi.value.trim(); qi.value = '';
+    const header = v.startsWith('#');
+    op({ op: 'item.add', board: b.id, kind: header ? 'header' : 'task', title: header ? v.replace(/^#+\s*/, '') : v });
+  };
+  q.appendChild(qi);
+  document.body.appendChild(q);
+
+  const list = el('div'); list.id = 'list'; list.dataset.scroll = 'list';
+  if (!b.items.length) list.appendChild(el('div', 'empty', 'Nothing here yet.'));
+  let folded = false;
+  b.items.forEach((item, idx) => {
+    if (item.kind === 'header') folded = item.collapsed;
+    else if (folded) return;
+    list.appendChild(row(b, item, idx));
+    if (item.kind !== 'header' && openItem === item.id) list.appendChild(details(b, item));
+  });
+  document.body.appendChild(list);
+}
+
+function row(b, item, idx) {
+  const isHead = item.kind === 'header';
+  const r = el('div', 'row ' + (isHead ? 'head' : 'task') + (item.status === 2 ? ' done' : '') + (openItem === item.id ? ' open' : ''));
+  r.draggable = true;
+  const grip = el('span', 'grip', '⋮⋮'); grip.title = 'Drag to move';
+  r.appendChild(grip);
+
+  // drag and drop to reorder (and onto a board tab to move boards)
+  r.ondragstart = e => { drag = item.id; r.classList.add('dragging'); e.dataTransfer.effectAllowed = 'move'; };
+  r.ondragend = () => { drag = null; r.classList.remove('dragging'); };
+  r.ondragover = e => {
+    if (!drag || drag === item.id) return;
+    e.preventDefault();
+    const top = e.offsetY < r.offsetHeight / 2;
+    r.classList.toggle('over-top', top); r.classList.toggle('over-bottom', !top);
+  };
+  r.ondragleave = () => r.classList.remove('over-top', 'over-bottom');
+  r.ondrop = e => {
+    e.preventDefault();
+    const top = r.classList.contains('over-top');
+    r.classList.remove('over-top', 'over-bottom');
+    if (!drag || drag === item.id) return;
+    const from = b.items.findIndex(x => x.id === drag);
+    let to = idx + (top ? 0 : 1);
+    if (from < to) to--;
+    op({ op: 'item.move', board: b.id, item: drag, to });
+    drag = null;
+  };
+
+  if (isHead) {
+    const f = el('span', 'fold', item.collapsed ? '▸' : '▾'); f.title = item.collapsed ? 'Unfold' : 'Fold';
+    f.onclick = () => op({ op: 'item.toggle', board: b.id, item: item.id });
+    r.appendChild(f);
+    r.appendChild(textInput('title', item.title, 'title:' + item.id, v => op({ op: 'item.update', board: b.id, item: item.id, title: v })));
+    const sec = []; for (let i = idx + 1; i < b.items.length && b.items[i].kind !== 'header'; i++) sec.push(b.items[i]);
+    if (sec.length) r.appendChild(el('span', 'count', `${sec.filter(t => t.status === 2).length} / ${sec.length}`));
+  } else {
+    r.appendChild(statusPill(item, () => op({ op: 'item.cycle', board: b.id, item: item.id })));
+    r.appendChild(textInput('title', item.title, 'title:' + item.id, v => op({ op: 'item.update', board: b.id, item: item.id, title: v })));
+    const marks = el('span', 'marks');
+    if ((item.notes || '').trim()) marks.appendChild(el('span', '', '≡'));
+    const subs = item.subtasks || [];
+    if (subs.length) { const n = subs.filter(s => s.done).length; marks.appendChild(el('span', n === subs.length ? 'full' : '', `${n}/${subs.length}`)); }
+    r.appendChild(marks);
+  }
+
+  const tools = el('span', 'tools');
+  if (isHead) {
+    const add = el('button', 'ico', '+'); add.title = 'Add a task to this section';
+    add.onclick = () => op({ op: 'item.add', board: b.id, kind: 'task', section: item.id, title: 'New task' }).then(id => focusTitle(id));
+    tools.appendChild(add);
+  } else {
+    const open = el('button', 'ico', openItem === item.id ? '▴' : '▾'); open.title = openItem === item.id ? 'Close details' : 'Notes and sub-tasks';
+    open.onclick = () => { openItem = openItem === item.id ? null : item.id; render(); };
+    tools.appendChild(open);
+  }
+  const x = el('button', 'ico danger', '✕'); x.title = isHead ? 'Delete section header (its tasks stay)' : 'Delete task';
+  twoStep(x, () => op({ op: 'item.delete', board: b.id, item: item.id }), '✕?');
+  tools.appendChild(x);
+  r.appendChild(tools);
+
+  // a click on the row (not on a control) opens / closes its details
+  if (!isHead) r.ondblclick = () => { openItem = openItem === item.id ? null : item.id; render(); };
+  return r;
+}
+
+function focusTitle(id) { setTimeout(() => { const n = document.querySelector(`[data-key="title:${id}"]`); if (n) { n.focus(); n.select(); } }, 40); }
+
+// panel: Esc saves the field you're in (blur commits it) and closes
+document.addEventListener('keydown', e => {
+  if (e.key !== 'Escape' || !state || state.mode !== 'panel') return;
+  const a = document.activeElement; if (a && a !== document.body) a.blur();
+  setTimeout(() => send({ t: 'close' }), 30);
+});
+send({ t: 'ready' });
+</script>
+</body>
+</html>

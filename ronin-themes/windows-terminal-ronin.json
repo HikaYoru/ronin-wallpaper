@@ -1,0 +1,42 @@
+{
+  "//": "Ronin for Windows Terminal. Copy the object inside \"schemes\" into the \"schemes\" list of your settings.json, then (optionally) copy the \"defaults\" values into profiles > defaults.",
+
+  "schemes": [
+    {
+      "name": "Ronin",
+      "background": "#0F1012",
+      "foreground": "#D9D6CF",
+      "cursorColor": "#C9A24A",
+      "selectionBackground": "#3A3326",
+
+      "black": "#1A1B1E",
+      "red": "#B3263B",
+      "green": "#7D8C6A",
+      "yellow": "#C9A24A",
+      "blue": "#5E6E86",
+      "purple": "#8A6E8C",
+      "cyan": "#6F8C8C",
+      "white": "#BDBAB3",
+
+      "brightBlack": "#4A4C51",
+      "brightRed": "#D0475A",
+      "brightGreen": "#9AAB86",
+      "brightYellow": "#F2C35B",
+      "brightBlue": "#8193AD",
+      "brightPurple": "#A98BAB",
+      "brightCyan": "#8FAEAE",
+      "brightWhite": "#ECE9E2"
+    }
+  ],
+
+  "profiles": {
+    "defaults": {
+      "colorScheme": "Ronin",
+      "cursorShape": "bar",
+      "opacity": 88,
+      "useAcrylic": true,
+      "padding": "14",
+      "font": { "face": "Cascadia Code", "size": 12 }
+    }
+  }
+}

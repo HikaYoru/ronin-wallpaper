@@ -1,0 +1,921 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Ronin</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@400;600&family=Cormorant+Garamond:ital,wght@0,400;0,500;1,400&family=Shippori+Mincho:wght@400;600&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --accent: #c9a24a;
+    --text: #d9d6cf;
+    --font: 'Cinzel', Georgia, serif;
+    --quote-font: 'Cormorant Garamond', Georgia, serif;
+    --vignette: .6;
+    --grain: .07;
+  }
+  html, body { margin: 0; height: 100%; overflow: hidden; background: #0f1012; }
+
+  /* ---------- background ---------- */
+  #scene { position: fixed; inset: -2.5%; will-change: transform; }
+  #bg {
+    position: absolute; inset: 0;
+    background-size: cover; background-position: center;
+    animation: breathe 70s ease-in-out infinite alternate;
+    transition: opacity .8s ease;
+  }
+  @keyframes breathe { from { transform: scale(1); } to { transform: scale(1.06); } }
+
+  /* time-of-day lighting */
+  #tint { position: fixed; inset: 0; pointer-events: none; opacity: 0; mix-blend-mode: multiply;
+          transition: opacity 6s linear, background-color 6s linear; }
+  #glow { position: fixed; inset: 0; pointer-events: none; opacity: 0; mix-blend-mode: screen;
+          background: radial-gradient(ellipse 90% 70% at 50% -15%, rgba(255,160,80,.85), rgba(255,120,60,.25) 45%, transparent 75%);
+          transition: opacity 6s linear; }
+
+  #fx { position: fixed; inset: 0; width: 100%; height: 100%; pointer-events: none; }
+
+  #vignette {
+    position: fixed; inset: 0; pointer-events: none;
+    background: radial-gradient(ellipse at 50% 45%, transparent 40%, rgba(5,5,7,.85) 100%);
+    opacity: var(--vignette);
+  }
+  #grain {
+    position: fixed; inset: -50%; pointer-events: none; opacity: var(--grain);
+    mix-blend-mode: overlay;
+    background-image: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='180' height='180'><filter id='n'><feTurbulence type='fractalNoise' baseFrequency='.85' numOctaves='2' stitchTiles='stitch'/><feColorMatrix type='saturate' values='0'/></filter><rect width='100%' height='100%' filter='url(%23n)'/></svg>");
+    animation: grain 1s steps(6) infinite;
+  }
+  @keyframes grain {
+    0% { transform: translate(0,0); } 20% { transform: translate(-3%,2%); }
+    40% { transform: translate(2%,-3%); } 60% { transform: translate(-2%,-1%); }
+    80% { transform: translate(3%,3%); } 100% { transform: translate(0,0); }
+  }
+  #flash {
+    position: fixed; inset: 0; pointer-events: none; opacity: 0;
+    background: radial-gradient(ellipse at 60% 0%, #eef2ff 0%, #a9b4cc 60%, #6c7486 100%);
+    mix-blend-mode: screen; transition: opacity .09s linear;
+  }
+
+  /* ---------- HUD blocks (position + scale set from JS, see layout()) ---------- */
+  #hud, #quoteBox, #todo {
+    position: fixed; z-index: 10; color: var(--text); font-family: var(--font);
+    width: max-content; /* don't get squashed when pinned near a screen edge */
+    transition: opacity .6s ease;
+  }
+  #quoteBox.attached { position: static; width: auto; }
+  #quoteBox:not(.attached) #quote { margin-top: 0; }
+  .guides #hud, .guides #quoteBox:not(.attached), .guides #todo { outline: 1px dashed var(--accent); outline-offset: 12px; }
+
+  #time {
+    font-size: 104px; font-weight: 400; line-height: 1; letter-spacing: .05em;
+    text-shadow: 0 2px 30px rgba(0,0,0,.75), 0 0 2px rgba(0,0,0,.6);
+    white-space: nowrap;
+  }
+  #time .colon {
+    color: var(--accent); display: inline-block; margin: 0 .04em;
+    text-shadow: 0 0 14px var(--accent), 0 0 30px var(--accent);
+    animation: pulse 2s ease-in-out infinite;
+  }
+  #time .ampm {
+    font-size: .24em; color: var(--accent); letter-spacing: .25em; margin-left: .45em;
+    vertical-align: .3em; text-shadow: 0 0 10px rgba(0,0,0,.8);
+  }
+  @keyframes pulse { 0%,100% { opacity: 1; } 50% { opacity: .35; } }
+
+  .rule { display: flex; align-items: center; gap: 12px; margin: 16px 0 14px; }
+  [data-align=right] .rule { justify-content: flex-end; }
+  [data-align=center] .rule { justify-content: center; }
+  .rule span { height: 1px; width: 90px; }
+  .rule span:first-child { background: linear-gradient(to right, transparent, var(--accent)); }
+  .rule span:last-child  { background: linear-gradient(to left,  transparent, var(--accent)); }
+  .rule i {
+    width: 7px; height: 7px; transform: rotate(45deg); flex: none;
+    border: 1px solid var(--accent); box-shadow: 0 0 10px var(--accent);
+  }
+
+  #date, #wx {
+    font-size: 15px; letter-spacing: .45em; text-transform: uppercase; opacity: .9;
+    text-shadow: 0 1px 12px rgba(0,0,0,.9); white-space: nowrap;
+  }
+  #wx { font-size: 12px; letter-spacing: .32em; margin-top: 10px; opacity: .75; }
+  #wx b { color: var(--accent); font-weight: 400; }
+
+  #quote {
+    margin-top: 26px; max-width: calc(var(--quote-width, 30) * 1em); display: inline-block;
+    font-family: var(--quote-font); font-style: italic; font-size: calc(21px * var(--quote-scale, 1)); line-height: 1.4;
+    opacity: .78; text-shadow: 0 1px 12px rgba(0,0,0,.95);
+    transition: opacity 1.4s ease;
+  }
+  #quote.hidden { opacity: 0; }
+  #quote .src {
+    display: block; margin-top: 8px; font-family: var(--font); font-style: normal;
+    font-size: .52em; letter-spacing: .32em; text-transform: uppercase; color: var(--accent);
+  }
+
+  #music {
+    margin-top: 22px; font-size: calc(12px * var(--quote-scale, 1));
+    letter-spacing: .28em; text-transform: uppercase;
+    opacity: .8; text-shadow: 0 1px 10px rgba(0,0,0,.9);
+    white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+  }
+  #music b { color: var(--accent); font-weight: 400; margin-right: .6em; }
+
+  /* ---------- to-do ---------- */
+  #todo { cursor: default; }
+  #todo .title { font-size: 14px; letter-spacing: .5em; text-transform: uppercase; text-shadow: 0 1px 12px rgba(0,0,0,.9); }
+  #todo .rule { margin: 12px 0 14px; }
+  #todo .rule span { width: 60px; }
+  #todoList { list-style: none; margin: 0; padding: 0; }
+  #todoList li {
+    font-family: var(--quote-font); font-size: 21px; line-height: 1.25; padding: 5px 0;
+    cursor: pointer; text-shadow: 0 1px 12px rgba(0,0,0,.95);
+    display: flex; align-items: center; gap: 14px; transition: opacity .4s ease;
+  }
+  #todo[data-align=right] #todoList li { flex-direction: row-reverse; }
+  #todo[data-align=center] #todoList li { justify-content: center; }
+  #todoList li .box {
+    width: 8px; height: 8px; flex: none; transform: rotate(45deg);
+    border: 1px solid var(--accent); transition: background .3s ease, box-shadow .3s ease;
+  }
+  #todoList li:hover .box { box-shadow: 0 0 8px var(--accent); }
+  #todoList li.done { opacity: .4; }
+  #todoList li.done .box { background: var(--accent); box-shadow: 0 0 10px var(--accent); }
+  #todoList li.done .txt { text-decoration: line-through; text-decoration-color: var(--accent); }
+
+  .off { display: none !important; }
+</style>
+</head>
+<body>
+  <div id="scene"><div id="bg"></div></div>
+  <div id="tint"></div>
+  <div id="glow"></div>
+  <canvas id="fx"></canvas>
+  <div id="flash"></div>
+  <div id="vignette"></div>
+  <div id="grain"></div>
+
+  <div id="hud">
+    <div id="clock">
+      <div id="time"></div>
+      <div class="rule"><span></span><i></i><span></span></div>
+      <div id="date"></div>
+      <div id="wx" class="off"></div>
+    </div>
+    <div id="quoteBox" class="attached">
+      <div id="quote"></div>
+      <div id="music" class="off"></div>
+    </div>
+  </div>
+
+  <div id="todo" class="off">
+    <div class="title" id="todoTitle">Tasks</div>
+    <div class="rule"><span></span><i></i><span></span></div>
+    <ul id="todoList"></ul>
+  </div>
+
+<script>
+/* =========================================================
+   Settings — defaults mirror project.json / LivelyProperties.json
+   ========================================================= */
+const S = {
+  background: 'images/ink-mountains.jpg', customImage: '',
+  dim: 15, desaturate: 30,
+  precip: 0,                 // 0 snow, 1 rain, 2 none (used when live weather is off)
+  snow: 45, wind: 25, fog: 40, embers: 35,
+  lightning: false, parallax: true, vignette: 60, grain: true,
+  liveWeather: false, city: '', units: 0, showWeather: true,
+  timeOfDay: true, todStrength: 60,
+  viz: true, vizY: 6, vizHeight: 70, vizThickness: 2, vizSensitivity: 100, vizReact: true,
+  accent: '#c9a24a', textColor: '#d9d6cf',
+  showClock: true, clock24: false, showDate: true,
+  position: 0, clockX: 100, clockY: 0, font: 0, uiScale: 100, guides: false,
+  showQuote: true, quoteText: '', quoteMinutes: 10, quoteScale: 100, quoteWidth: 30,
+  quoteLayout: 0, quoteX: 50, quoteY: 92,
+  showMusic: true,
+  showTodo: true, todoTitle: 'Tasks', todoText: '', todoX: 0, todoY: 55, todoScale: 100,
+};
+let fpsCap = 0; // 0 = uncapped (Wallpaper Engine sets this from its FPS setting)
+
+const PRESETS = [[100, 0], [0, 0], [100, 100], [0, 100], [50, 50]]; // index 5 = custom sliders
+const LAYOUT_KEYS = ['position', 'clockX', 'clockY', 'uiScale', 'quoteLayout', 'quoteX', 'quoteY',
+  'quoteScale', 'quoteWidth', 'todoX', 'todoY', 'todoScale'];
+const COMBO_KEYS = ['position', 'font', 'quoteLayout', 'precip', 'units'];
+const WEATHER_KEYS = ['liveWeather', 'city', 'units'];
+const FONTS = [
+  "'Cinzel', Georgia, serif",
+  "'Cormorant Garamond', Georgia, serif",
+  "'Shippori Mincho', 'Yu Mincho', serif",
+];
+const PROVERBS = [
+  ['Fall seven times, stand up eight.', 'Japanese proverb'],
+  ['A gem cannot be polished without friction.', 'Chinese proverb'],
+  ['Beginning is easy. Continuing is hard.', 'Japanese proverb'],
+  ['Even monkeys fall from trees.', 'Japanese proverb'],
+  ['Knowing others is wisdom. Knowing yourself is enlightenment.', 'Laozi'],
+  ['Vision without action is a daydream.', 'Japanese proverb'],
+  ['The journey of a thousand miles begins with a single step.', 'Laozi'],
+  ['When the winds of change blow, some build walls, others build windmills.', 'Chinese proverb'],
+  ['The bamboo that bends is stronger than the oak that resists.', 'Japanese proverb'],
+];
+
+const $ = id => document.getElementById(id);
+const root = document.documentElement;
+const clamp = (v, a, b) => Math.min(b, Math.max(a, v));
+
+function esc(s) {
+  return String(s).replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
+}
+function hex(c) {
+  c = String(c || '').trim();
+  if (/^#[0-9a-f]{8}$/i.test(c)) c = '#' + c.slice(3); // #AARRGGBB -> #RRGGBB
+  return c;
+}
+function rgb(c) {
+  c = hex(c).replace('#', '');
+  if (c.length === 3) c = c.split('').map(x => x + x).join('');
+  const n = parseInt(c, 16) || 0;
+  return [(n >> 16) & 255, (n >> 8) & 255, n & 255];
+}
+
+/* =========================================================
+   Host hooks: Lively + Wallpaper Engine
+   ========================================================= */
+function setTrack(title, artist) {
+  const el = $('music');
+  if (title) {
+    el.innerHTML = '<b>&#9670;</b>' + esc(title) + (artist ? ' &nbsp;&mdash;&nbsp; ' + esc(artist) : '');
+    el.dataset.has = '1';
+  } else {
+    el.dataset.has = '';
+  }
+  el.classList.toggle('off', !(S.showMusic && el.dataset.has));
+}
+
+// Lively
+function livelyPropertyListener(name, val) {
+  if (!(name in S)) return;
+  S[name] = val;
+  apply(name);
+}
+function livelyCurrentTrack(data) {
+  let t = null;
+  try { t = JSON.parse(data); } catch (e) {}
+  setTrack(t && t.Title, t && t.Artist);
+}
+function livelyAudioListener(arr) { onAudio(arr); }
+
+// Wallpaper Engine (it lowercases property keys)
+const KEYMAP = {};
+Object.keys(S).forEach(k => { KEYMAP[k.toLowerCase()] = k; });
+
+function weColor(v) { // "0.79 0.64 0.29" -> "#c9a349"
+  const p = String(v).split(' ').map(n => Math.round(clamp(parseFloat(n) || 0, 0, 1) * 255));
+  return '#' + p.slice(0, 3).map(n => n.toString(16).padStart(2, '0')).join('');
+}
+
+window.wallpaperPropertyListener = {
+  applyUserProperties(props) {
+    for (const raw in props) {
+      const key = KEYMAP[raw];
+      if (!key) continue;
+      let v = props[raw].value;
+      if (key === 'accent' || key === 'textColor') v = weColor(v);
+      else if (COMBO_KEYS.includes(key)) v = parseInt(v, 10) || 0;
+      else if (key === 'customImage') v = v ? 'file:///' + decodeURIComponent(v) : '';
+      S[key] = v;
+      apply(key === 'customImage' ? 'background' : key);
+    }
+  },
+  applyGeneralProperties(props) {
+    if (props.fps) fpsCap = props.fps;
+  },
+};
+// Wallpaper Engine may inject its audio/media functions a moment after the page starts,
+// so keep trying for a while instead of checking only once.
+const hooked = { audio: false, media: false, playback: false };
+function registerHostHooks() {
+  if (!hooked.audio && typeof window.wallpaperRegisterAudioListener === 'function') {
+    window.wallpaperRegisterAudioListener(onAudio); hooked.audio = true;
+  }
+  if (!hooked.media && typeof window.wallpaperRegisterMediaPropertiesListener === 'function') {
+    window.wallpaperRegisterMediaPropertiesListener(e => setTrack(e.title, e.artist)); hooked.media = true;
+  }
+  if (!hooked.playback && typeof window.wallpaperRegisterMediaPlaybackListener === 'function') {
+    window.wallpaperRegisterMediaPlaybackListener(e => {
+      const mi = window.wallpaperMediaIntegration;
+      if (mi && e.state === mi.PLAYBACK_STOPPED) setTrack('');
+    });
+    hooked.playback = true;
+  }
+  return hooked.audio && hooked.media && hooked.playback;
+}
+if (!registerHostHooks()) {
+  let tries = 0;
+  const iv = setInterval(() => { if (registerHostHooks() || ++tries > 60) clearInterval(iv); }, 250);
+  window.addEventListener('load', registerHostHooks);
+}
+
+/* =========================================================
+   Apply settings
+   ========================================================= */
+function bgPath(v) {
+  if (S.customImage) return encodeURI(String(S.customImage).replace(/\\/g, '/'));
+  let p = String(v || '').replace(/\\/g, '/');
+  if (!p.includes('/')) p = 'images/' + p;
+  return encodeURI(p);
+}
+
+let currentBg = '';
+function setBackground() {
+  const url = bgPath(S.background);
+  if (url === currentBg) return;
+  const first = !currentBg;
+  currentBg = url;
+  const bg = $('bg');
+  const img = new Image();
+  img.onload = () => {
+    const swap = () => { bg.style.backgroundImage = `url("${url}")`; bg.style.opacity = 1; };
+    if (first) swap(); else { bg.style.opacity = 0; setTimeout(swap, 800); }
+  };
+  img.src = url;
+}
+
+function apply(name) {
+  const all = !name;
+  if (all || name === 'background') setBackground();
+  if (all || name === 'dim' || name === 'desaturate') {
+    $('bg').style.filter =
+      `brightness(${1 - S.dim / 100}) saturate(${1 - S.desaturate / 100}) contrast(1.06)`;
+  }
+  if (all || name === 'vignette') root.style.setProperty('--vignette', S.vignette / 100);
+  if (all || name === 'grain') root.style.setProperty('--grain', S.grain ? .07 : 0);
+  if (all || name === 'accent') { root.style.setProperty('--accent', hex(S.accent)); buildSprites(); }
+  if (all || name === 'textColor') root.style.setProperty('--text', hex(S.textColor));
+  if (all || name === 'font') root.style.setProperty('--font', FONTS[S.font] || FONTS[0]);
+  if (all || LAYOUT_KEYS.includes(name)) layout();
+  if (all || name === 'guides') document.body.classList.toggle('guides', !!S.guides);
+  if (all || name === 'showClock' || name === 'showDate') {
+    $('clock').classList.toggle('off', !S.showClock);
+    $('date').classList.toggle('off', !S.showDate);
+    document.querySelector('#clock .rule').classList.toggle('off', !S.showDate);
+  }
+  if (all || name === 'clock24') tick(true);
+  if (all || name === 'showQuote' || name === 'quoteText' || name === 'quoteMinutes') {
+    $('quote').classList.toggle('off', !S.showQuote);
+    startQuotes();
+  }
+  if (all || name === 'showMusic') {
+    const el = $('music');
+    el.classList.toggle('off', !(S.showMusic && el.dataset.has));
+  }
+  if (all || name === 'showTodo' || name === 'todoText' || name === 'todoTitle') renderTodo();
+  if (all || WEATHER_KEYS.includes(name)) {
+    if (name === 'liveWeather') { renderWx(); computeEffective(); }
+    scheduleWeather(all || name === 'liveWeather' ? 0 : 1500); // typing a city waits until you pause
+  }
+  if (all || name === 'showWeather') renderWx();
+  if (all || name === 'timeOfDay' || name === 'todStrength') updateTimeOfDay();
+  if (all || ['precip', 'snow', 'wind', 'fog', 'lightning'].includes(name)) computeEffective();
+  if (name === 'parallax' && !S.parallax) { mouse.tx = mouse.ty = 0; }
+}
+
+/* =========================================================
+   Layout — x/y are 0..100 across the screen (inside a margin).
+   The element's matching point is pinned there, so 0 hugs the
+   left/top edge and 100 the right/bottom. Scaling grows from it.
+   ========================================================= */
+function place(el, x, y, scale) {
+  const mx = 5, my = 7;
+  const align = x < 34 ? 'left' : x > 66 ? 'right' : 'center';
+  Object.assign(el.style, {
+    left: (mx + x * (100 - 2 * mx) / 100) + 'vw',
+    top: (my + y * (100 - 2 * my) / 100) + 'vh',
+    transform: `translate(${-x}%, ${-y}%) scale(${scale})`,
+    transformOrigin: `${x}% ${y}%`,
+    textAlign: align,
+  });
+  el.dataset.align = align;
+}
+
+function layout() {
+  const custom = +S.position === 5;
+  const [cx, cy] = custom ? [+S.clockX, +S.clockY] : (PRESETS[+S.position] || PRESETS[0]);
+  const ui = S.uiScale / 100;
+  place($('hud'), cx, cy, ui);
+
+  root.style.setProperty('--quote-scale', S.quoteScale / 100);
+  root.style.setProperty('--quote-width', S.quoteWidth);
+
+  const qb = $('quoteBox');
+  const attached = +S.quoteLayout !== 1;
+  qb.classList.toggle('attached', attached);
+  if (attached) {
+    if (qb.parentNode !== $('hud')) $('hud').appendChild(qb);
+    ['left', 'top', 'transform', 'transformOrigin', 'textAlign'].forEach(p => { qb.style[p] = ''; });
+    delete qb.dataset.align;
+  } else {
+    if (qb.parentNode !== document.body) document.body.appendChild(qb);
+    place(qb, +S.quoteX, +S.quoteY, ui);
+  }
+  place($('todo'), +S.todoX, +S.todoY, S.todoScale / 100);
+}
+
+/* =========================================================
+   Clock
+   ========================================================= */
+let lastStamp = '';
+function tick(force) {
+  const d = new Date();
+  let h = d.getHours();
+  const m = String(d.getMinutes()).padStart(2, '0');
+  let ampm = '';
+  if (!S.clock24) { ampm = h >= 12 ? 'PM' : 'AM'; h = h % 12 || 12; }
+  else h = String(h).padStart(2, '0');
+  const stamp = h + ':' + m + ampm + d.getDate();
+  if (stamp === lastStamp && !force) return;
+  lastStamp = stamp;
+  $('time').innerHTML = `${h}<span class="colon">:</span>${m}` + (ampm ? `<span class="ampm">${ampm}</span>` : '');
+  const wd = d.toLocaleDateString(undefined, { weekday: 'long' });
+  const md = d.toLocaleDateString(undefined, { day: 'numeric', month: 'long' });
+  $('date').innerHTML = `${esc(wd)} &nbsp;&middot;&nbsp; ${esc(md)}`;
+}
+setInterval(tick, 1000);
+
+/* =========================================================
+   Quotes
+   ========================================================= */
+let quoteTimer = null, quoteIdx = Math.floor(Math.random() * PROVERBS.length);
+function renderQuote() {
+  const q = $('quote');
+  const custom = String(S.quoteText || '').trim();
+  let text, src = '';
+  if (custom) { text = custom; }
+  else { [text, src] = PROVERBS[quoteIdx % PROVERBS.length]; quoteIdx++; }
+  q.classList.add('hidden');
+  setTimeout(() => {
+    q.innerHTML = '&ldquo;' + esc(text) + '&rdquo;' + (src ? `<span class="src">${esc(src)}</span>` : '');
+    q.classList.remove('hidden');
+  }, q.innerHTML ? 1400 : 0);
+}
+function startQuotes() {
+  clearInterval(quoteTimer);
+  if (!S.showQuote) return;
+  renderQuote();
+  if (!String(S.quoteText || '').trim()) {
+    quoteTimer = setInterval(renderQuote, Math.max(1, S.quoteMinutes) * 60000);
+  }
+}
+
+/* =========================================================
+   To-do list — items separated by ";" in settings.
+   Click an item to tick it off; ticks are remembered.
+   ========================================================= */
+const TODO_KEY = 'ronin.todo.done';
+function loadDone() { try { return new Set(JSON.parse(localStorage.getItem(TODO_KEY) || '[]')); } catch (e) { return new Set(); } }
+function saveDone(set) { try { localStorage.setItem(TODO_KEY, JSON.stringify([...set])); } catch (e) {} }
+
+function todoItems() {
+  return String(S.todoText || '').split(/\s*[;|\n]\s*/).map(s => s.trim()).filter(Boolean);
+}
+function renderTodo() {
+  const items = todoItems();
+  const box = $('todo');
+  box.classList.toggle('off', !S.showTodo || !items.length);
+  $('todoTitle').textContent = S.todoTitle || 'Tasks';
+  const done = loadDone();
+  // forget ticks for items that no longer exist
+  const live = new Set(items.filter(i => done.has(i)));
+  if (live.size !== done.size) saveDone(live);
+  $('todoList').innerHTML = items.map(t =>
+    `<li class="${live.has(t) ? 'done' : ''}" data-t="${esc(t)}"><span class="box"></span><span class="txt">${esc(t)}</span></li>`
+  ).join('');
+}
+$('todoList').addEventListener('click', e => {
+  const li = e.target.closest('li');
+  if (!li) return;
+  const t = li.dataset.t, done = loadDone();
+  if (done.has(t)) done.delete(t); else done.add(t);
+  saveDone(done);
+  li.classList.toggle('done', done.has(t));
+});
+
+/* =========================================================
+   Live weather — Open-Meteo (free, no key)
+   ========================================================= */
+const WX = { place: '', lat: null, lon: null, key: '', data: null, err: '', sunrise: null, sunset: null };
+let wxTimer = null, wxRefresh = null;
+
+function scheduleWeather(delay) {
+  clearTimeout(wxTimer);
+  wxTimer = setTimeout(fetchWeather, delay);
+}
+
+// weather code -> [precip (0 snow, 1 rain, 2 none), amount, fog, storm, label]
+function decodeWeather(code) {
+  const T = {
+    0: [2, 0, 0, 0, 'Clear'], 1: [2, 0, 5, 0, 'Mostly clear'], 2: [2, 0, 15, 0, 'Partly cloudy'], 3: [2, 0, 30, 0, 'Overcast'],
+    45: [2, 0, 90, 0, 'Fog'], 48: [2, 0, 90, 0, 'Freezing fog'],
+    51: [1, 20, 30, 0, 'Light drizzle'], 53: [1, 30, 35, 0, 'Drizzle'], 55: [1, 40, 40, 0, 'Heavy drizzle'],
+    56: [1, 30, 35, 0, 'Freezing drizzle'], 57: [1, 45, 40, 0, 'Freezing drizzle'],
+    61: [1, 40, 35, 0, 'Light rain'], 63: [1, 65, 40, 0, 'Rain'], 65: [1, 90, 45, 0, 'Heavy rain'],
+    66: [1, 50, 40, 0, 'Freezing rain'], 67: [1, 80, 45, 0, 'Freezing rain'],
+    71: [0, 35, 30, 0, 'Light snow'], 73: [0, 60, 35, 0, 'Snow'], 75: [0, 90, 45, 0, 'Heavy snow'], 77: [0, 25, 30, 0, 'Snow grains'],
+    80: [1, 50, 35, 0, 'Showers'], 81: [1, 70, 40, 0, 'Heavy showers'], 82: [1, 95, 45, 0, 'Violent showers'],
+    85: [0, 55, 35, 0, 'Snow showers'], 86: [0, 90, 45, 0, 'Heavy snow showers'],
+    95: [1, 80, 45, 1, 'Thunderstorm'], 96: [1, 90, 50, 1, 'Thunderstorm, hail'], 99: [1, 95, 50, 1, 'Thunderstorm, hail'],
+  };
+  return T[code] || [2, 0, 20, 0, 'Unknown'];
+}
+
+const hhmmToMin = s => { const m = /T(\d\d):(\d\d)/.exec(s || ''); return m ? +m[1] * 60 + +m[2] : null; };
+
+async function fetchWeather() {
+  clearTimeout(wxRefresh);
+  const city = String(S.city || '').trim();
+  if (!S.liveWeather || !city) {
+    WX.data = null; WX.err = ''; WX.sunrise = WX.sunset = null;
+    renderWx(); computeEffective(); updateTimeOfDay();
+    return;
+  }
+  try {
+    if (WX.key !== city) {
+      // "Berlin, Germany" -> search "Berlin", prefer a result matching "Germany"
+      const [name, ...rest] = city.split(',').map(s => s.trim());
+      const hint = rest.join(' ').toLowerCase();
+      const g = await fetch('https://geocoding-api.open-meteo.com/v1/search?count=10&language=en&format=json&name='
+        + encodeURIComponent(name)).then(r => r.json());
+      const list = (g && g.results) || [];
+      if (!list.length) throw new Error('City not found');
+      const pick = (hint && list.find(r => [r.country, r.country_code, r.admin1].some(v => v && hint.includes(String(v).toLowerCase())))) || list[0];
+      Object.assign(WX, { lat: pick.latitude, lon: pick.longitude, place: pick.name, key: city });
+    }
+    const unit = +S.units === 1 ? '&temperature_unit=fahrenheit' : '';
+    const j = await fetch(`https://api.open-meteo.com/v1/forecast?latitude=${WX.lat}&longitude=${WX.lon}`
+      + '&current=temperature_2m,weather_code,wind_speed_10m,wind_direction_10m,cloud_cover'
+      + '&daily=sunrise,sunset&forecast_days=1&timezone=auto' + unit).then(r => r.json());
+    const c = j.current;
+    if (!c) throw new Error('No data');
+    const [precip, amount, fog, storm, label] = decodeWeather(c.weather_code);
+    // wind direction is where it blows FROM; take the east-west part for the screen
+    const dir = (c.wind_direction_10m || 0) * Math.PI / 180;
+    const wind = clamp(-Math.sin(dir) * (c.wind_speed_10m || 0) * 2.2, -100, 100);
+    WX.data = {
+      precip, amount, storm: !!storm, label, wind,
+      fog: Math.max(fog, (c.cloud_cover || 0) * .3),
+      temp: Math.round(c.temperature_2m), unit: +S.units === 1 ? 'F' : 'C',
+    };
+    WX.sunrise = hhmmToMin(j.daily && j.daily.sunrise && j.daily.sunrise[0]);
+    WX.sunset = hhmmToMin(j.daily && j.daily.sunset && j.daily.sunset[0]);
+    WX.err = '';
+  } catch (e) {
+    WX.err = e.message || 'Weather unavailable';
+    if (WX.key !== city) WX.data = null;
+  }
+  renderWx(); computeEffective(); updateTimeOfDay();
+  wxRefresh = setTimeout(fetchWeather, 15 * 60000);
+}
+
+function renderWx() {
+  const el = $('wx');
+  const show = S.liveWeather && S.showWeather && (WX.data || WX.err);
+  el.classList.toggle('off', !show);
+  if (!show) return;
+  if (WX.data) {
+    const d = WX.data;
+    el.innerHTML = `<b>${d.temp}&deg;${d.unit}</b> &nbsp;&middot;&nbsp; ${esc(d.label)} &nbsp;&middot;&nbsp; ${esc(WX.place)}`;
+  } else {
+    el.innerHTML = `Weather: ${esc(WX.err)}`;
+  }
+}
+
+/* effective weather = live weather if on, otherwise the manual sliders */
+const E = { precip: 0, amount: 45, wind: 25, fog: 40, lightning: false };
+function computeEffective() {
+  const wasStorm = E.lightning;
+  if (S.liveWeather && WX.data) {
+    Object.assign(E, { precip: WX.data.precip, amount: WX.data.amount, wind: WX.data.wind, fog: WX.data.fog, lightning: WX.data.storm });
+  } else {
+    Object.assign(E, { precip: +S.precip, amount: +S.snow, wind: +S.wind, fog: +S.fog, lightning: !!S.lightning });
+  }
+  if (wasStorm !== E.lightning || !lightningTimer) scheduleLightning();
+}
+
+/* =========================================================
+   Time of day — night blue, dawn rose, dusk amber.
+   Uses real sunrise/sunset when live weather is on.
+   ========================================================= */
+const TOD = {
+  night: { c: [70, 86, 140], a: .55, g: 0 },
+  dawn:  { c: [220, 170, 185], a: .30, g: .12 },
+  day:   { c: [255, 255, 255], a: 0, g: 0 },
+  dusk:  { c: [235, 155, 95], a: .42, g: .2 },
+};
+function updateTimeOfDay() {
+  const tint = $('tint'), glow = $('glow');
+  if (!S.timeOfDay) { tint.style.opacity = 0; glow.style.opacity = 0; return; }
+  const d = new Date();
+  const m = d.getHours() * 60 + d.getMinutes();
+  const sr = WX.sunrise != null ? WX.sunrise : 390;  // 6:30
+  const ss = WX.sunset != null ? WX.sunset : 1110;   // 18:30
+  const K = [[0, 'night'], [sr - 90, 'night'], [sr, 'dawn'], [sr + 90, 'day'],
+             [ss - 90, 'day'], [ss, 'dusk'], [ss + 90, 'night'], [1440, 'night']];
+  let i = 0;
+  while (i < K.length - 2 && m >= K[i + 1][0]) i++;
+  const [t0, p0] = K[i], [t1, p1] = K[i + 1];
+  const f = t1 > t0 ? clamp((m - t0) / (t1 - t0), 0, 1) : 0;
+  const A = TOD[p0], B = TOD[p1], s = S.todStrength / 100;
+  const c = A.c.map((v, k) => Math.round(v + (B.c[k] - v) * f));
+  tint.style.backgroundColor = `rgb(${c.join(',')})`;
+  tint.style.opacity = (A.a + (B.a - A.a) * f) * s;
+  glow.style.opacity = (A.g + (B.g - A.g) * f) * s;
+}
+setInterval(updateTimeOfDay, 60000);
+
+/* =========================================================
+   Lightning
+   ========================================================= */
+let lightningTimer = null;
+function scheduleLightning() {
+  clearTimeout(lightningTimer);
+  lightningTimer = null;
+  if (!E.lightning) return;
+  lightningTimer = setTimeout(() => { strike(); lightningTimer = null; scheduleLightning(); }, 7000 + Math.random() * 18000);
+}
+function strike() {
+  const f = $('flash');
+  const seq = [[0, .5], [90, 0], [170, .3], [260, 0], [330, .15], [800, 0]];
+  seq.forEach(([t, o]) => setTimeout(() => { f.style.opacity = o; }, t));
+}
+
+/* =========================================================
+   Audio (music visualizer)
+   ========================================================= */
+const audioRaw = new Float32Array(64), audioSm = new Float32Array(64);
+let lastAudioAt = -1e9, bass = 0, audioFrames = 0, audioPeak = 0;
+function onAudio(a) {
+  if (!a || !a.length) return;
+  audioFrames++;
+  let pk = 0; for (let i = 0; i < a.length; i++) if (a[i] > pk) pk = a[i];
+  audioPeak = Math.max(pk, audioPeak * .9);
+  const stereo = a.length >= 128;
+  for (let i = 0; i < 64; i++) {
+    const v = stereo ? ((a[i] || 0) + (a[i + 64] || 0)) * .5 : (a[i] || 0);
+    audioRaw[i] = Math.min(1.5, v);
+  }
+  lastAudioAt = performance.now();
+}
+
+/* =========================================================
+   Particles: fog, embers, snow, rain + ink line — one canvas
+   ========================================================= */
+const cv = $('fx');
+const ctx = cv.getContext('2d');
+let W = 0, H = 0, DPR = 1;
+function resize() {
+  DPR = Math.min(window.devicePixelRatio || 1, 1.5);
+  W = window.innerWidth; H = window.innerHeight;
+  cv.width = Math.round(W * DPR); cv.height = Math.round(H * DPR);
+  ctx.setTransform(DPR, 0, 0, DPR, 0, 0);
+}
+window.addEventListener('resize', resize);
+resize();
+
+function sprite(size, stops) {
+  const c = document.createElement('canvas');
+  c.width = c.height = size;
+  const g = c.getContext('2d');
+  const gr = g.createRadialGradient(size / 2, size / 2, 0, size / 2, size / 2, size / 2);
+  stops.forEach(([o, col]) => gr.addColorStop(o, col));
+  g.fillStyle = gr; g.fillRect(0, 0, size, size);
+  return c;
+}
+const snowSprite = sprite(64, [[0, 'rgba(255,255,255,1)'], [.35, 'rgba(240,243,248,.75)'], [1, 'rgba(230,235,245,0)']]);
+const fogSprite = sprite(256, [[0, 'rgba(196,201,210,.55)'], [.5, 'rgba(180,186,196,.22)'], [1, 'rgba(170,176,188,0)']]);
+let emberSprite = null;
+function buildSprites() {
+  const [r, g, b] = rgb(S.accent);
+  emberSprite = sprite(64, [
+    [0, 'rgba(255,245,215,1)'], [.12, `rgba(${r},${g},${b},.95)`],
+    [.4, `rgba(${r},${g},${b},.28)`], [1, `rgba(${r},${g},${b},0)`],
+  ]);
+}
+
+const rand = (a, b) => a + Math.random() * (b - a);
+const snow = [], rain = [], embers = [], fog = [];
+
+function newFlake(spawnTop) {
+  const z = Math.pow(Math.random(), 1.6) * .95 + .05;
+  return {
+    x: rand(-.1, 1.1) * W, y: spawnTop ? rand(-40, -5) : rand(0, H), z,
+    r: .8 + z * 3.4, vy: 18 + z * 75, sway: rand(.4, 1.4), ph: rand(0, 6.28), a: .25 + z * .65,
+  };
+}
+function newDrop(spawnTop) {
+  const z = Math.pow(Math.random(), 1.3) * .85 + .15;
+  return {
+    x: rand(-.25, 1.25) * W, y: spawnTop ? rand(-H * .3, -10) : rand(-H * .2, H), z,
+    len: 10 + z * 26, vy: 650 + z * 750, b: z < .45 ? 0 : z < .75 ? 1 : 2,
+  };
+}
+function newEmber(spawnBottom) {
+  return {
+    x: rand(0, W), y: spawnBottom ? H + rand(5, 60) : rand(H * .3, H), z: rand(.3, 1),
+    vy: -rand(8, 26), vx: rand(-6, 6), r: rand(1.2, 3.2), ph: rand(0, 6.28), f: rand(1.5, 4),
+    life: 0, max: rand(9, 22),
+  };
+}
+for (let i = 0; i < 7; i++) {
+  fog.push({ x: rand(-.3, 1), y: rand(.45, .95), w: rand(.5, .9), h: rand(.18, .32), v: rand(.004, .012) * (i % 2 ? 1 : .7), a: rand(.6, 1) });
+}
+
+function syncCount(arr, target, make) {
+  while (arr.length < target) arr.push(make(false));
+  if (arr.length > target) arr.length = target;
+}
+
+const mouse = { x: 0, y: 0, tx: 0, ty: 0 };
+window.addEventListener('mousemove', e => {
+  if (!S.parallax) return;
+  mouse.tx = (e.clientX / W) * 2 - 1;
+  mouse.ty = (e.clientY / H) * 2 - 1;
+});
+
+/* gold ink line along the bottom */
+const VIZ_N = 120, vizPts = new Float32Array((VIZ_N + 1) * 2);
+function inkPath(base, scaleY, off) {
+  ctx.beginPath();
+  const y = j => base + (vizPts[j * 2 + 1] - base) * scaleY + off;
+  ctx.moveTo(vizPts[0], y(0));
+  for (let j = 1; j < VIZ_N; j++) {
+    const x = vizPts[j * 2], nx = vizPts[(j + 1) * 2];
+    const yy = y(j), ny = y(j + 1);
+    ctx.quadraticCurveTo(x, yy, (x + nx) / 2, (yy + ny) / 2);
+  }
+  ctx.lineTo(vizPts[VIZ_N * 2], y(VIZ_N));
+}
+function drawViz(t) {
+  const base = H * (1 - S.vizY / 100), amp = +S.vizHeight;
+  for (let j = 0; j <= VIZ_N; j++) {
+    const u = j / VIZ_N, d = Math.abs(u - .5) * 2;          // bass in the middle, highs at the edges
+    const f = d * 63, i0 = Math.floor(f), i1 = Math.min(63, i0 + 1), fr = f - i0;
+    const v = Math.min(1.4, audioSm[i0] * (1 - fr) + audioSm[i1] * fr);
+    const env = Math.pow(Math.sin(Math.PI * u), .8);          // fade into the screen edges
+    const idle = Math.sin(u * 14 + t * .9) * 1.6 + Math.sin(u * 31 - t * 1.3) * .8;
+    vizPts[j * 2] = u * W;
+    vizPts[j * 2 + 1] = base - (v * amp + idle) * env;
+  }
+  const [r, g, b] = rgb(S.accent);
+  const hi = [r, g, b].map(v => Math.round(v + (255 - v) * .45));
+  const grad = ctx.createLinearGradient(0, 0, W, 0);
+  grad.addColorStop(0, `rgba(${r},${g},${b},0)`);
+  grad.addColorStop(.18, `rgba(${r},${g},${b},.85)`);
+  grad.addColorStop(.5, `rgba(${hi.join(',')},1)`);
+  grad.addColorStop(.82, `rgba(${r},${g},${b},.85)`);
+  grad.addColorStop(1, `rgba(${r},${g},${b},0)`);
+  const th = +S.vizThickness;
+  ctx.lineCap = 'round'; ctx.lineJoin = 'round'; ctx.strokeStyle = grad;
+  ctx.globalCompositeOperation = 'lighter';
+  ctx.globalAlpha = .1 + bass * .18; ctx.lineWidth = th * 7; inkPath(base, 1, 0); ctx.stroke();      // glow
+  ctx.globalAlpha = .95; ctx.lineWidth = th; inkPath(base, 1, 0); ctx.stroke();                        // main stroke
+  ctx.globalAlpha = .35; ctx.lineWidth = Math.max(.6, th * .45); inkPath(base, 1.06, th * 1.3); ctx.stroke(); // brush bristle
+  ctx.globalAlpha = .16; ctx.lineWidth = th * .8; inkPath(base, -.45, 0); ctx.stroke();                // reflection
+}
+
+let last = performance.now(), t = 0;
+function frame(now) {
+  if (fpsCap > 0 && now - last < 1000 / fpsCap - 1) { requestAnimationFrame(frame); return; }
+  const dt = Math.min((now - last) / 1000, .05);
+  last = now; t += dt;
+
+  mouse.x += (mouse.tx - mouse.x) * Math.min(1, dt * 2.5);
+  mouse.y += (mouse.ty - mouse.y) * Math.min(1, dt * 2.5);
+  $('scene').style.transform = `translate3d(${-mouse.x * 16}px, ${-mouse.y * 10}px, 0)`;
+
+  // audio smoothing: fast attack, slow release; fall to silence if data stops
+  if (now - lastAudioAt > 300) audioRaw.fill(0);
+  const sens = S.vizSensitivity / 100;
+  let bsum = 0;
+  for (let i = 0; i < 64; i++) {
+    const target = audioRaw[i] * sens * (1 + i / 40);
+    const rate = target > audioSm[i] ? 18 : 5;
+    audioSm[i] += (target - audioSm[i]) * Math.min(1, dt * rate);
+    if (i < 6) bsum += audioSm[i];
+  }
+  bass = Math.min(1.2, bsum / 6);
+  const pulse = S.vizReact ? bass : 0;
+
+  syncCount(snow, E.precip === 0 ? Math.round(E.amount * 4.5) : 0, newFlake);
+  syncCount(rain, E.precip === 1 ? Math.round(E.amount * 6) : 0, newDrop);
+  syncCount(embers, Math.round(S.embers * .7), newEmber);
+
+  ctx.clearRect(0, 0, W, H);
+
+  // fog
+  if (E.fog > 0) {
+    ctx.globalCompositeOperation = 'screen';
+    for (const f of fog) {
+      f.x += f.v * dt * (1 + E.wind / 100);
+      if (f.x > 1.15) f.x = -f.w - .1;
+      if (f.x < -f.w - .2) f.x = 1.1;
+      const breathe = .75 + .25 * Math.sin(t * .15 + f.y * 10);
+      ctx.globalAlpha = (E.fog / 100) * .45 * f.a * breathe;
+      ctx.drawImage(fogSprite, (f.x - mouse.x * .006) * W, f.y * H - f.h * H / 2, f.w * W, f.h * H);
+    }
+  }
+
+  // embers (pulse with the bass)
+  if (emberSprite && embers.length) {
+    ctx.globalCompositeOperation = 'lighter';
+    for (let i = 0; i < embers.length; i++) {
+      const e = embers[i];
+      e.life += dt;
+      e.x += (e.vx + Math.sin(t * .8 + e.ph) * 8 + E.wind * .15) * dt;
+      e.y += e.vy * (1 + pulse * 1.5) * dt;
+      if (e.y < -20 || e.life > e.max) { embers[i] = newEmber(true); continue; }
+      const fadeIn = Math.min(1, e.life / 2), fadeOut = Math.min(1, (e.max - e.life) / 3);
+      const flicker = .55 + .45 * Math.sin(t * e.f + e.ph);
+      ctx.globalAlpha = Math.min(1, fadeIn * fadeOut * flicker * e.z * (1 + pulse * 1.6));
+      const s = e.r * 5 * e.z * (1 + pulse * .6);
+      ctx.drawImage(emberSprite, e.x - mouse.x * 10 * e.z - s / 2, e.y - mouse.y * 6 * e.z - s / 2, s, s);
+    }
+  }
+
+  // snow
+  if (snow.length) {
+    ctx.globalCompositeOperation = 'source-over';
+    const wind = E.wind / 100;
+    for (let i = 0; i < snow.length; i++) {
+      const p = snow[i];
+      p.y += p.vy * dt;
+      p.x += (wind * (40 + p.z * 110) + Math.sin(t * p.sway + p.ph) * 14 * p.z) * dt;
+      if (p.y > H + 10) { snow[i] = newFlake(true); continue; }
+      if (p.x > W * 1.15) p.x = -W * .1;
+      else if (p.x < -W * .15) p.x = W * 1.1;
+      ctx.globalAlpha = p.a;
+      const s = p.r * 2;
+      ctx.drawImage(snowSprite, p.x - mouse.x * 22 * p.z - s / 2, p.y - mouse.y * 12 * p.z - s / 2, s, s);
+    }
+  }
+
+  // rain — three depth layers, each one batched path
+  if (rain.length) {
+    ctx.globalCompositeOperation = 'source-over';
+    ctx.strokeStyle = 'rgb(200,208,222)';
+    ctx.lineCap = 'round';
+    const slant = (E.wind / 100) * .55;
+    const layers = [[.12, .6], [.22, 1], [.36, 1.5]];
+    for (let b = 0; b < 3; b++) {
+      ctx.beginPath();
+      for (let i = 0; i < rain.length; i++) {
+        const d = rain[i];
+        if (b === 0) { // move once per frame
+          d.y += d.vy * dt;
+          d.x += d.vy * slant * dt;
+          if (d.y > H + 30) { rain[i] = newDrop(true); continue; }
+          if (d.x > W * 1.3) d.x -= W * 1.5; else if (d.x < -W * .3) d.x += W * 1.5;
+        }
+        if (d.b !== b) continue;
+        const px = d.x - mouse.x * 22 * d.z, py = d.y - mouse.y * 12 * d.z;
+        ctx.moveTo(px, py);
+        ctx.lineTo(px - d.len * slant, py - d.len);
+      }
+      ctx.globalAlpha = layers[b][0];
+      ctx.lineWidth = layers[b][1];
+      ctx.stroke();
+    }
+  }
+
+  // music ink line
+  if (S.viz) drawViz(t);
+
+  // diagnostics: shown only while "Show layout outlines" is on
+  if (S.guides) {
+    const recent = now - lastAudioAt < 1000;
+    const msg = audioFrames
+      ? (recent ? `AUDIO: receiving · peak ${audioPeak.toFixed(2)}${audioPeak < .01 ? ' (silent — is anything playing?)' : ''}`
+                : 'AUDIO: data stopped')
+      : hooked.audio ? 'AUDIO: connected, no data received yet'
+      : 'AUDIO: not connected — wallpaper engine has not given this wallpaper audio';
+    ctx.globalCompositeOperation = 'source-over';
+    ctx.globalAlpha = .9;
+    ctx.fillStyle = hex(S.accent);
+    ctx.font = '12px Cinzel, Georgia, serif';
+    ctx.textAlign = 'left';
+    ctx.fillText(msg + `  ·  media: ${hooked.media ? 'on' : 'off'}`, 20, H * (1 - S.vizY / 100) - 14);
+  }
+
+  ctx.globalCompositeOperation = 'source-over';
+  ctx.globalAlpha = 1;
+  requestAnimationFrame(frame);
+}
+
+/* ---------- start ---------- */
+apply();
+tick(true);
+requestAnimationFrame(frame);
+</script>
+</body>
+</html>

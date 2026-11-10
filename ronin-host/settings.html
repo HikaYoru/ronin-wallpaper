@@ -1,0 +1,421 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Ronin — Settings</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@400;600&family=Cormorant+Garamond:wght@400;500&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg: #141618; --panel: #1b1d20; --line: #2a2c30; --text: #e6e0d2; --dim: #8f8a80;
+    --gold: #c9a24a; --gold-dim: #7d6630;
+    --serif: 'Cinzel', Georgia, serif; --body: 'Segoe UI Variable Text', 'Segoe UI', sans-serif;
+  }
+  * { box-sizing: border-box; }
+  html, body { margin: 0; background: var(--bg); color: var(--text); font: 13px/1.4 var(--body); }
+  body { padding: 0 0 40px; user-select: none; }
+  ::-webkit-scrollbar { width: 10px; } ::-webkit-scrollbar-thumb { background: #2c2e32; border-radius: 5px; border: 2px solid var(--bg); }
+
+  header { position: sticky; top: 0; z-index: 5; background: linear-gradient(var(--bg) 80%, transparent);
+           padding: 22px 28px 14px; display: flex; align-items: baseline; gap: 14px; }
+  header h1 { margin: 0; font: 600 22px var(--serif); letter-spacing: .32em; color: var(--text); }
+  header h1 b { color: var(--gold); font-weight: 600; }
+  header .sub { color: var(--dim); font-size: 11px; letter-spacing: .25em; text-transform: uppercase; flex: 1; }
+  header button { font: 11px var(--serif); letter-spacing: .2em; text-transform: uppercase; color: var(--dim);
+                  background: none; border: 1px solid var(--line); padding: 6px 12px; cursor: pointer; }
+  header button:hover { color: var(--gold); border-color: var(--gold-dim); }
+
+  nav { display: flex; flex-wrap: wrap; gap: 6px 14px; padding: 0 28px 10px; }
+  nav a { color: var(--dim); text-decoration: none; font: 10.5px var(--serif); letter-spacing: .22em; text-transform: uppercase; cursor: pointer; }
+  nav a:hover { color: var(--gold); }
+
+  section { margin: 18px 22px 0; background: var(--panel); border: 1px solid var(--line); padding: 6px 18px 10px; }
+  .rule { display: flex; align-items: center; gap: 10px; margin: 10px 0 8px; }
+  .rule h2 { margin: 0; font: 400 12px var(--serif); letter-spacing: .38em; text-transform: uppercase; color: var(--gold); white-space: nowrap; }
+  .rule span { height: 1px; flex: 1; background: linear-gradient(to right, var(--gold-dim), transparent); }
+  .rule i { width: 6px; height: 6px; transform: rotate(45deg); border: 1px solid var(--gold); flex: none; }
+
+  .row { display: grid; grid-template-columns: 1fr 230px; align-items: center; gap: 16px; padding: 7px 0; border-top: 1px solid #222428; }
+  .row:first-of-type { border-top: 0; }
+  .row label.t { color: var(--text); }
+  .row .c { display: flex; align-items: center; gap: 10px; justify-content: flex-end; }
+
+  input[type=range] { -webkit-appearance: none; appearance: none; width: 170px; height: 18px; background: transparent; margin: 0; }
+  input[type=range]::-webkit-slider-runnable-track { height: 2px; background: linear-gradient(to right, var(--gold) var(--p, 50%), #3a3c40 var(--p, 50%)); }
+  input[type=range]::-webkit-slider-thumb { -webkit-appearance: none; width: 11px; height: 11px; margin-top: -4.5px; transform: rotate(45deg);
+                                            background: var(--bg); border: 1.5px solid var(--gold); }
+  input[type=range]:focus { outline: none; } input[type=range]:focus::-webkit-slider-thumb { box-shadow: 0 0 8px var(--gold); }
+  .val { width: 44px; text-align: right; color: var(--dim); font-variant-numeric: tabular-nums; }
+
+  input[type=text], select { width: 230px; background: #121315; color: var(--text); border: 1px solid var(--line); padding: 6px 8px; font: inherit; outline: none; }
+  input[type=text]:focus, select:focus { border-color: var(--gold-dim); }
+  select option { background: #121315; }
+
+  .tog { position: relative; width: 38px; height: 18px; cursor: pointer; }
+  .tog input { opacity: 0; position: absolute; inset: 0; margin: 0; cursor: pointer; }
+  .tog span { position: absolute; inset: 0; border: 1px solid #3a3c40; transition: border-color .2s; }
+  .tog span::after { content: ''; position: absolute; top: 4px; left: 5px; width: 7px; height: 7px; transform: rotate(45deg);
+                     border: 1px solid var(--dim); transition: left .2s, background .2s, border-color .2s, box-shadow .2s; }
+  .tog input:checked + span { border-color: var(--gold-dim); }
+  .tog input:checked + span::after { left: 24px; background: var(--gold); border-color: var(--gold); box-shadow: 0 0 8px var(--gold); }
+
+  input[type=color] { -webkit-appearance: none; width: 38px; height: 22px; border: 1px solid var(--line); background: none; padding: 0; cursor: pointer; }
+  input[type=color]::-webkit-color-swatch-wrapper { padding: 2px; } input[type=color]::-webkit-color-swatch { border: 0; }
+  .hex { color: var(--dim); font-variant-numeric: tabular-nums; width: 64px; }
+  .note { color: var(--dim); font-size: 11.5px; padding: 2px 0 8px; }
+  .btn { font: 11px var(--serif); letter-spacing: .2em; text-transform: uppercase; color: var(--gold);
+         background: none; border: 1px solid var(--gold-dim); padding: 6px 14px; cursor: pointer; }
+  .btn:hover { background: var(--gold); color: var(--bg); }
+  .editing { position: sticky; top: 64px; z-index: 4; margin: 10px 22px 0; display: flex; align-items: center; gap: 12px; padding: 8px 14px;
+             background: #1f1c15; border: 1px solid var(--gold-dim); }
+  .editing > span:first-child { font: 11px var(--serif); letter-spacing: .25em; text-transform: uppercase; color: var(--gold); }
+  .editing select { width: 220px; } .editing .hint { color: var(--dim); font-size: 11.5px; }
+  .ov { color: var(--gold); font-size: 9px; margin-right: 6px; vertical-align: 2px; }
+  .differs { color: var(--dim); margin-right: 6px; cursor: help; }
+  .reset1 { background: none; border: 1px solid var(--line); color: var(--gold); width: 22px; height: 22px; padding: 0; cursor: pointer; }
+  .reset1:hover { border-color: var(--gold-dim); }
+  .card { border: 1px solid var(--line); background: #17191c; padding: 4px 14px 10px; margin: 10px 0 4px; }
+  .card-h { display: flex; align-items: center; gap: 10px; font: 11px var(--serif); letter-spacing: .25em; text-transform: uppercase; color: var(--text); padding: 8px 0 4px; }
+  .card-h i { width: 6px; height: 6px; transform: rotate(45deg); background: var(--gold); flex: none; }
+  .grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 6px 18px; padding: 8px 0 2px; border-top: 1px solid #222428; }
+  .sched { padding: 4px 0 10px; border-top: 1px solid #222428; }
+  .sched-row { display: flex; align-items: center; gap: 8px; padding: 4px 0; }
+  .sched input.time { width: 64px; text-align: center; }
+  .days { display: inline-flex; gap: 2px; margin-left: 6px; }
+  .days button, .sched .x { font: 10px var(--serif); width: 22px; height: 22px; padding: 0; background: none; color: var(--dim); border: 1px solid var(--line); cursor: pointer; }
+  .days button.on { color: var(--bg); background: var(--gold); border-color: var(--gold); }
+  .sched .x { margin-left: auto; } .sched .x:hover { color: var(--gold); border-color: var(--gold-dim); }
+  .cell { display: flex; align-items: center; justify-content: space-between; gap: 8px; color: var(--dim); font-size: 12px; }
+</style>
+</head>
+<body>
+<header>
+  <h1>R<b>O</b>NIN</h1>
+  <div class="sub">wallpaper settings</div>
+  <button id="reset" title="Put every wallpaper setting back to its default">Reset</button>
+</header>
+<nav id="nav"></nav>
+<div id="root"></div>
+
+<script>
+// Sections only group keys for display; labels, types and ranges all come from LivelyProperties.json.
+const GROUPS = [
+  ['Background', ['background', 'panorama', 'dim', 'desaturate']],
+  ['Weather', ['liveWeather', 'city', 'units', 'showWeather', 'precip', 'snow', 'wind', 'fog', 'lightning', 'sharedWeather']],
+  ['Atmosphere', ['embers', 'parallax', 'vignette', 'grain', 'timeOfDay', 'todStrength']],
+  ['Music', ['viz', 'vizSensitivity', 'vizHeight', 'vizThickness', 'vizY', 'vizReact', 'showMusic']],
+  ['Colours', ['accent', 'textColor']],
+  ['Clock', ['showClock', 'clock24', 'showDate', 'position', 'clockX', 'clockY', 'font', 'uiScale', 'guides']],
+  ['Quote', ['showQuote', 'quoteText', 'quoteScale', 'quoteWidth', 'quoteLayout', 'quoteX', 'quoteY', 'quoteMinutes']],
+  ['To-do', ['showTodo', 'todoEdit', 'todoDone', 'todoDaily', 'todoX', 'todoY', 'todoScale',
+    'todoBg', 'todoBgStyle', 'todoBgColor', 'todoBgOpacity', 'todoBgRound', 'taskHud', 'taskHudKey', 'taskHudOpacity']],
+  ['Calendar', ['showCalendar', 'calendarUrl', 'calendarDays', 'calendarMax', 'calX', 'calY', 'calScale']],
+  ['System', ['showSystem', 'sysX', 'sysY', 'sysScale']],
+  ['Focus timer', ['showTimer', 'timerMinutes', 'timerBreak', 'timerX', 'timerY', 'timerScale']],
+  ['Album', ['showAlbum', 'albumX', 'albumY', 'albumScale']],
+  ['World clocks', ['showWorld', 'worldClocks', 'worldX', 'worldY', 'worldScale']],
+];
+const ELEMENTS = [['showClock', 'Clock'], ['showQuote', 'Quote'], ['showMusic', 'Now playing line'], ['showTodo', 'Tasks'],
+  ['showCalendar', 'Calendar'], ['showSystem', 'System'], ['showTimer', 'Focus timer'], ['showAlbum', 'Album art'], ['showWorld', 'World clocks']];
+const NOTES = {
+  'Calendar': 'Google Calendar: Settings → your calendar → "Secret address in iCal format". Outlook: Calendar → Shared calendars → Publish → ICS.',
+  'World clocks': 'Time zones like Asia/Tokyo, Europe/Paris, America/Chicago or Windows names like "Pacific Standard Time".',
+  'Focus timer': 'Click the ring on the desktop to start, pause and resume. Paused, a Reset link appears under it.',
+};
+
+const wv = window.chrome.webview;
+const send = m => wv.postMessage(m);
+const esc = s => String(s).replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
+let state = null;
+
+wv.addEventListener('message', e => { if (e.data && e.data.t === 'init') { state = e.data; render(); } });
+
+function section(title, id) {
+  const s = document.createElement('section');
+  s.id = id;
+  s.innerHTML = `<div class="rule"><i></i><h2>${esc(title)}</h2><span></span></div>`;
+  document.getElementById('root').appendChild(s);
+  const a = document.createElement('a');
+  a.textContent = title; a.onclick = () => s.scrollIntoView({ behavior: 'smooth', block: 'start' });
+  document.getElementById('nav').appendChild(a);
+  return s;
+}
+
+function row(parent, label, control) {
+  const r = document.createElement('div');
+  r.className = 'row';
+  r.innerHTML = `<label class="t">${esc(label)}</label><div class="c"></div>`;
+  r.querySelector('.c').append(...[].concat(control));
+  parent.appendChild(r);
+  return r;
+}
+
+// ---- editing one monitor's own values ----
+let editing = 'all'; // 'all' or a monitor id
+const monName = id => ((state.host.monitors || []).find(m => m.id === id) || { name: id }).name;
+
+/// a gold dot and a reset button on rows this monitor has its own value for
+function markOverride(r, k, mon) {
+  if (r.querySelector('.ov')) return;
+  const ov = (state.host.overrides[mon] = state.host.overrides[mon] || []);
+  if (!ov.includes(k)) ov.push(k);
+  const dot = document.createElement('span'); dot.className = 'ov'; dot.textContent = '●'; dot.title = 'This monitor has its own value';
+  const back = document.createElement('button'); back.className = 'reset1'; back.textContent = '↺'; back.title = 'Use the shared value';
+  back.onclick = () => send({ t: 'unset', k, mon });
+  r.querySelector('label.t').prepend(dot);
+  r.querySelector('.c').prepend(back);
+}
+
+function toggle(checked, onChange) {
+  const l = document.createElement('label'); l.className = 'tog';
+  l.innerHTML = '<input type="checkbox"><span></span>';
+  const i = l.querySelector('input'); i.checked = !!checked;
+  i.onchange = () => onChange(i.checked);
+  return l;
+}
+
+function selectBox(items, value, onChange) {
+  const s = document.createElement('select');
+  items.forEach(([v, label]) => { const o = document.createElement('option'); o.value = v; o.textContent = label; s.appendChild(o); });
+  s.value = value;
+  s.onchange = () => onChange(s.value);
+  return s;
+}
+
+function control(key, def, value, set = v => send({ t: 'set', k: key, v })) {
+  switch (def.type) {
+    case 'slider': {
+      const i = document.createElement('input'); i.type = 'range';
+      i.min = def.min; i.max = def.max; i.step = def.step || 1; i.value = value;
+      const out = document.createElement('span'); out.className = 'val';
+      const paint = () => { out.textContent = i.value; i.style.setProperty('--p', ((i.value - def.min) / (def.max - def.min) * 100) + '%'); };
+      paint();
+      i.oninput = () => { paint(); set(parseFloat(i.value)); };
+      return [i, out];
+    }
+    case 'checkbox': return toggle(value, set);
+    case 'dropdown': return selectBox(def.items.map((t, n) => [n, t]), value, v => set(parseInt(v, 10)));
+    case 'folderDropdown': {
+      const files = (state.folders && state.folders[key]) || [];
+      if (value && !files.includes(value)) files.unshift(value);
+      return selectBox(files.map(f => [f, f.replace(/\.[^.]+$/, '')]), value, set);
+    }
+    case 'color': {
+      const i = document.createElement('input'); i.type = 'color'; i.value = value;
+      const hx = document.createElement('span'); hx.className = 'hex'; hx.textContent = value;
+      i.oninput = () => { hx.textContent = i.value; set(i.value); };
+      return [hx, i];
+    }
+    case 'textbox': {
+      const i = document.createElement('input'); i.type = 'text'; i.value = value ?? ''; i.spellcheck = false;
+      let tm; i.oninput = () => { clearTimeout(tm); tm = setTimeout(() => set(i.value), 350); };
+      return i;
+    }
+    default: {
+      const s = document.createElement('span'); s.className = 'val'; s.textContent = String(value); return s;
+    }
+  }
+}
+
+function render() {
+  const scroll = window.scrollY;
+  requestAnimationFrame(() => window.scrollTo(0, scroll)); // a refresh (e.g. after arranging) keeps your place
+  document.getElementById('root').innerHTML = '';
+  document.getElementById('nav').innerHTML = '';
+  const { schema, values, host } = state;
+
+  // which monitor's values are shown below (several monitors only)
+  const multi = host.cards && host.cards.length > 1;
+  if (!multi || (editing !== 'all' && !(host.monValues || {})[editing])) editing = 'all';
+  if (multi) {
+    const bar = document.createElement('div'); bar.className = 'editing';
+    const lab = document.createElement('span'); lab.textContent = 'Editing';
+    const sel = selectBox([['all', 'All monitors (shared)']].concat(host.cards.map(c => [c.id, c.name])), editing, v => { editing = v; render(); });
+    bar.append(lab, sel);
+    const hint = document.createElement('span'); hint.className = 'hint';
+    hint.textContent = editing === 'all' ? 'Changes apply to every monitor.' : 'Changes apply to this monitor only (● = its own value, ↺ = back to shared).';
+    bar.append(hint);
+    document.getElementById('root').appendChild(bar);
+  }
+
+  // host options
+  const h = section('Display', 'host');
+  // one toggle per connected monitor; at least one stays on
+  const selected = new Set(host.selected || []);
+  host.monitors.forEach(m => {
+    row(h, 'Wallpaper on ' + m.name, toggle(selected.has(m.id), on => {
+      const next = new Set(selected);
+      if (on) next.add(m.id); else next.delete(m.id);
+      if (!next.size) { render(); return; } // can't turn off the last one
+      send({ t: 'host', k: 'monitors', v: [...next] });
+    }));
+  });
+  const arrange = document.createElement('button');
+  arrange.className = 'btn'; arrange.textContent = 'Arrange…';
+  arrange.onclick = () => send({ t: 'host', k: 'arrange' });
+  row(h, 'Drag the clock, quote, tasks and widgets into place', arrange);
+  if (selected.size > 1 || host.perMonitor) {
+    const n = document.createElement('div'); n.className = 'note';
+    n.textContent = 'With several monitors, positions you drag in Arrange are kept per monitor. Moving a slider below applies it to every monitor.';
+    h.appendChild(n);
+  }
+  row(h, 'Renderer', selectBox([['native', 'Native (light)'], ['web', 'Web (original page)']], host.renderer,
+      v => send({ t: 'host', k: 'renderer', v })));
+  row(h, 'Frame rate limit', selectBox([[0, 'Match the display'], [60, '60 fps'], [30, '30 fps']], host.fps,
+      v => send({ t: 'host', k: 'fps', v: parseInt(v, 10) })));
+  if ((host.selected || []).length > 1) {
+    row(h, 'Frame rate on the other monitors', selectBox([[0, 'Same as the main one'], [30, '30 fps'], [20, '20 fps'], [15, '15 fps']], host.sideFps,
+        v => send({ t: 'host', k: 'sideFps', v: parseInt(v, 10) })));
+    row(h, 'Slow the other monitors while a fullscreen app (a game) has focus', toggle(host.slowFullscreen, v => send({ t: 'host', k: 'slowFullscreen', v })));
+  }
+  row(h, 'Pause when an app is fullscreen or maximized', toggle(host.pauseWhenCovered, v => send({ t: 'host', k: 'pauseWhenCovered', v })));
+  // saved layouts
+  const layouts = host.layouts || [];
+  const saveBtn = document.createElement('button'); saveBtn.className = 'btn'; saveBtn.textContent = 'Save as…';
+  saveBtn.onclick = () => send({ t: 'host', k: 'saveLayout' });
+  const pick = layouts.length
+    ? selectBox([['', 'Choose…']].concat(layouts.map(n => [n, n])), host.layout && layouts.includes(host.layout) ? host.layout : '',
+        v => { if (v) send({ t: 'host', k: 'layout', v }); })
+    : Object.assign(document.createElement('span'), { className: 'hex', textContent: 'none yet' });
+  if (layouts.length) pick.style.width = '130px';
+  row(h, 'Layout (positions, sizes, what each monitor shows, backgrounds)', [pick, saveBtn]);
+  if (layouts.length) scheduleRows(h, layouts, host.schedule || []);
+  const exp = document.createElement('button'); exp.className = 'btn'; exp.textContent = 'Export…';
+  exp.onclick = () => send({ t: 'host', k: 'export' });
+  const imp = document.createElement('button'); imp.className = 'btn'; imp.textContent = 'Import…';
+  imp.onclick = () => send({ t: 'host', k: 'import' });
+  row(h, 'All settings and layouts as one file', [exp, imp]);
+  row(h, 'Start with Windows', toggle(host.startup, v => send({ t: 'host', k: 'startup', v })));
+  // updates (from the releases folder or URL that tools\publish.ps1 writes)
+  const ver = Object.assign(document.createElement('span'), { className: 'hex', textContent: host.updateStatus || '' });
+  ver.style.width = 'auto';
+  const upd = document.createElement('button'); upd.className = 'btn';
+  upd.textContent = host.updateAvailable ? 'Install ' + host.updateAvailable : 'Check now';
+  upd.onclick = () => send({ t: 'host', k: host.updateAvailable ? 'installUpdate' : 'checkNow' });
+  row(h, 'Ronin ' + (host.version || ''), [ver, upd]);
+  const srcBox = document.createElement('input'); srcBox.type = 'text'; srcBox.value = host.updateSource || ''; srcBox.spellcheck = false;
+  srcBox.placeholder = 'Releases folder or https:// address';
+  srcBox.onchange = () => send({ t: 'host', k: 'updateSource', v: srcBox.value });
+  row(h, 'Look for updates in', srcBox);
+  row(h, 'Check for updates once a day', toggle(host.checkUpdates, v => send({ t: 'host', k: 'checkUpdates', v })));
+
+  if (host.cards && host.cards.length > 1) monitorCards(host.cards);
+
+  const used = new Set();
+  const groups = GROUPS.map(([title, keys]) => [title, keys.filter(k => k in schema)]);
+  GROUPS.forEach(([, keys]) => keys.forEach(k => used.add(k)));
+  ['todoTitle', 'todoText'].forEach(k => used.add(k)); // the old text list: tasks live in the Tasks window now
+  const rest = Object.keys(schema).filter(k => !used.has(k));
+  if (rest.length) groups.push(['Other', rest]);
+
+  groups.forEach(([title, keys]) => {
+    if (!keys.length) return;
+    const s = section(title, 'g-' + title);
+    const mon = editing !== 'all' ? editing : null;
+    const vals = mon ? host.monValues[mon] : values;
+    keys.forEach(k => {
+      const def = schema[k];
+      if (!def || def.type === 'button' || def.type === 'label') return;
+      let r;
+      const set = mon ? (v => { send({ t: 'set', k, v, mon }); markOverride(r, k, mon); }) : (v => send({ t: 'set', k, v }));
+      r = row(s, def.text || k, control(k, def, vals[k], set));
+      if (mon && (host.overrides[mon] || []).includes(k)) markOverride(r, k, mon);
+      if (!mon) {
+        const differ = Object.entries(host.overrides || {}).filter(([, ks]) => ks.includes(k)).map(([id]) => monName(id));
+        if (differ.length) {
+          const d = document.createElement('span'); d.className = 'differs'; d.textContent = '≠';
+          d.title = 'Different on ' + differ.join(', ') + ' (changing it here applies it everywhere)';
+          r.querySelector('label.t').prepend(d);
+        }
+      }
+    });
+    if (title === 'To-do') {
+      const n = document.createElement('div'); n.className = 'note';
+      n.textContent = 'On the desktop: click a task’s diamond to change its status (not started → in progress → done), click its name for notes and sub-tasks, click a section header to fold it. Hover a row for ↑ ↓ ✕.';
+      s.appendChild(n);
+      const ob = document.createElement('button'); ob.className = 'btn'; ob.textContent = 'Open tasks…';
+      ob.onclick = () => send({ t: 'host', k: 'openTasks' });
+      s.insertBefore(row(document.createElement('div'), 'Boards, sections, tasks, notes and sub-tasks', ob), s.children[1]);
+    }
+    if (NOTES[title]) {
+      const n = document.createElement('div'); n.className = 'note';
+      n.textContent = NOTES[title];
+      s.appendChild(n);
+    }
+  });
+}
+
+// switch layouts by time of day: [layout] at [time] on [days]
+function scheduleRows(parent, layouts, schedule) {
+  const list = schedule.map(e => ({ layout: e.layout, time: e.time, days: e.days.slice() }));
+  const box = document.createElement('div'); box.className = 'sched';
+  const head = document.createElement('div'); head.className = 'note';
+  head.textContent = 'Layout schedule: at each time, switch to that layout (switching by hand lasts until the next one).';
+  box.appendChild(head);
+  const save = () => send({ t: 'host', k: 'schedule', v: list });
+  const DAYS = ['S', 'M', 'T', 'W', 'T', 'F', 'S'], FULL = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'];
+  list.forEach((e, i) => {
+    const r = document.createElement('div'); r.className = 'sched-row';
+    const sel = selectBox(layouts.map(n => [n, n]), layouts.includes(e.layout) ? e.layout : layouts[0], v => { e.layout = v; save(); });
+    sel.style.width = '130px';
+    const time = document.createElement('input'); time.type = 'text'; time.value = e.time; time.className = 'time'; time.placeholder = 'HH:MM';
+    time.onchange = () => { const m = /^(\d{1,2}):(\d{2})$/.exec(time.value.trim()); if (m && +m[1] < 24 && +m[2] < 60) { e.time = m[1].padStart(2, '0') + ':' + m[2]; save(); } else time.value = e.time; };
+    const days = document.createElement('span'); days.className = 'days';
+    DAYS.forEach((d, n) => {
+      const b = document.createElement('button'); b.textContent = d; b.title = FULL[n];
+      const on = () => e.days.length === 0 || e.days.includes(n);
+      b.className = on() ? 'on' : '';
+      b.onclick = () => {
+        let set = e.days.length === 0 ? [0, 1, 2, 3, 4, 5, 6] : e.days.slice();
+        set = set.includes(n) ? set.filter(x => x !== n) : set.concat(n);
+        if (!set.length) return; // at least one day
+        e.days = set.length === 7 ? [] : set.sort();
+        save();
+      };
+      days.appendChild(b);
+    });
+    const del = document.createElement('button'); del.className = 'x'; del.textContent = '✕'; del.title = 'Remove';
+    del.onclick = () => { list.splice(i, 1); save(); };
+    r.append(sel, Object.assign(document.createElement('span'), { className: 'hex', textContent: 'at' }), time, days, del);
+    box.appendChild(r);
+  });
+  const add = document.createElement('button'); add.className = 'btn'; add.textContent = '+ Add switch';
+  add.onclick = () => { list.push({ layout: layouts[0], time: '09:00', days: [] }); save(); };
+  box.appendChild(add);
+  parent.appendChild(box);
+}
+
+// one card per wallpaper monitor: what it is for, its own background, and which elements it shows
+function monitorCards(cards) {
+  const s = section('Monitors', 'monitors');
+  const files = (state.folders && state.folders.background) || [];
+  const note = document.createElement('div'); note.className = 'note';
+  note.textContent = 'Main: clock and tasks. Side: agenda, world clocks, album, system and the quote. Ambient: just the scene. ' +
+    'Changing an element below makes that monitor "custom"; changing the same setting further down applies it to every monitor again.';
+  s.appendChild(note);
+  cards.forEach(c => {
+    const card = document.createElement('div'); card.className = 'card';
+    card.innerHTML = `<div class="card-h"><i></i>${esc(c.name)}</div>`;
+    s.appendChild(card);
+    const roles = [['shared', 'Shared settings'], ['main', 'Main'], ['side', 'Side'], ['ambient', 'Ambient']];
+    if (c.role === 'custom') roles.push(['custom', 'Custom']);
+    row(card, 'Role', selectBox(roles, c.role, v => { if (v !== 'custom') send({ t: 'mon', id: c.id, k: 'role', v }); }));
+    const bg = [['', 'Shared background']].concat(files.map(f => [f, f.replace(/\.[^.]+$/, '')]));
+    const boards = [['', 'No task board']].concat((host.boards || []).map(b => [b.id, b.name]));
+    row(card, 'Task board', selectBox(boards, c.board || '', v => send({ t: 'mon', id: c.id, k: 'board', v })));
+    row(card, 'Background', selectBox(bg, c.background || '', v => send({ t: 'mon', id: c.id, k: 'background', v })));
+    const grid = document.createElement('div'); grid.className = 'grid';
+    ELEMENTS.forEach(([k, label]) => {
+      const cell = document.createElement('div'); cell.className = 'cell';
+      const l = document.createElement('span'); l.textContent = label;
+      cell.append(l, toggle(c.show[k], v => send({ t: 'mon', id: c.id, k, v })));
+      grid.appendChild(cell);
+    });
+    card.appendChild(grid);
+  });
+}
+
+document.getElementById('reset').onclick = () => send({ t: 'reset' });
+</script>
+</body>
+</html>

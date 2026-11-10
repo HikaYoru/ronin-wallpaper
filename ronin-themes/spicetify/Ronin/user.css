@@ -1,0 +1,19 @@
+/* Ronin — colors live in color.ini; these are small finishing touches.
+   Spotify renames its classes now and then, so if one stops matching it's simply ignored. */
+
+/* thin gold line above the player bar */
+.main-nowPlayingBar-nowPlayingBar,
+.Root__now-playing-bar {
+  border-top: 1px solid rgba(201, 162, 74, .25) !important;
+}
+
+/* softer, squarer cards */
+.main-card-card {
+  border-radius: 4px !important;
+}
+
+/* gold glow on the play button */
+.main-playButton-PlayButton button,
+.encore-bright-accent-set {
+  box-shadow: 0 0 14px rgba(201, 162, 74, .35);
+}

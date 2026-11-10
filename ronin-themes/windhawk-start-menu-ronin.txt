@@ -1,0 +1,29 @@
+Ronin gold for Windhawk "Windows 11 Start Menu Styler" with the FlyoutStartMenu theme.
+
+TEXTUAL MODE: replace the line
+  "themeResourceVariables": [""],
+with:
+
+  "themeResourceVariables": [
+    "AccentColor1@Dark=#F2C35B",
+    "AccentColor2@Dark=#C9A24A",
+    "AccentColor3@Dark=#E8CE8A",
+    "SystemChromeAutoColor@Dark=#141518",
+    "NativeAcrylicOpacity@Dark=0.7",
+    "SurfaceStrokeColorDefault=#66C9A24A",
+    "ControlFillColorSecondary=#26C9A24A"
+  ],
+
+VISUAL MODE: under "Resource variables", Add new item for each line (without the quotes):
+  AccentColor1@Dark=#F2C35B          gold search-box underline and highlights
+  AccentColor2@Dark=#C9A24A          main gold accent
+  AccentColor3@Dark=#E8CE8A          light gold accent
+  SystemChromeAutoColor@Dark=#141518 charcoal tint for the glass panels
+  NativeAcrylicOpacity@Dark=0.7      more charcoal, less see-through (0.5 = theme default)
+  SurfaceStrokeColorDefault=#66C9A24A thin gold border around the panels (66 = ~40% strength)
+  ControlFillColorSecondary=#26C9A24A faint gold glow when hovering buttons/apps
+
+Tuning: the first two hex digits of an 8-digit color are its strength.
+  #66C9A24A border -> try #99C9A24A for bolder, #33C9A24A for subtler.
+  #26C9A24A hover  -> try #40C9A24A for a stronger hover glow.
+To undo: delete the lines and save.

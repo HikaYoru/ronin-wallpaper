@@ -1,0 +1,47 @@
+{
+  "panorama": { "type": "checkbox", "value": false, "text": "Spread one image across all monitors (panorama)" },
+  "sharedWeather": { "type": "checkbox", "value": true, "text": "Snow, rain, mist and embers drift across monitors" },
+
+  "todoEdit": { "type": "checkbox", "value": true, "text": "Add and clear tasks on the desktop (+ Add task · Clear ticked)" },
+  "todoDaily": { "type": "checkbox", "value": false, "text": "Set finished tasks back to not started at midnight (daily routine)" },
+  "todoDone": { "type": "dropdown", "value": 0, "text": "Finished tasks", "items": [ "Dimmed where they are", "Moved to the bottom of their section", "Hidden a day after they're done" ] },
+  "todoBg": { "type": "dropdown", "value": 0, "text": "Background behind the tasks", "items": [ "Off", "One panel behind the whole list", "A box behind each line" ] },
+  "todoBgStyle": { "type": "dropdown", "value": 0, "text": "Background style (also the task HUD)", "items": [ "Ronin: ink with a gold edge", "Ronin: ink with gold corners", "Ronin: plain ink" ] },
+  "todoBgColor": { "type": "color", "value": "#0c0d10", "text": "Background colour (also the task HUD)" },
+  "todoBgOpacity": { "type": "slider", "value": 55, "text": "Background opacity", "min": 0, "max": 100, "step": 1 },
+  "todoBgRound": { "type": "slider", "value": 3, "text": "Background corner rounding (also the task HUD)", "min": 0, "max": 24, "step": 1 },
+  "taskHud": { "type": "checkbox", "value": true, "text": "Task HUD: a sticky note of your tasks on a keyboard shortcut" },
+  "taskHudKey": { "type": "textbox", "value": "Ctrl+Alt+T", "text": "Task HUD shortcut (e.g. Ctrl+Alt+T, Win+Shift+Q, Ctrl+F9)" },
+  "taskHudOpacity": { "type": "slider", "value": 92, "text": "Task HUD opacity", "min": 20, "max": 100, "step": 1 },
+
+  "showCalendar": { "type": "checkbox", "value": false, "text": "Show calendar" },
+  "calendarUrl": { "type": "textbox", "value": "", "text": "Calendar link (.ics, e.g. Google Calendar's \"secret address in iCal format\")" },
+  "calendarDays": { "type": "slider", "value": 3, "text": "Calendar: days ahead", "min": 1, "max": 14, "step": 1 },
+  "calendarMax": { "type": "slider", "value": 6, "text": "Calendar: events shown", "min": 1, "max": 12, "step": 1 },
+  "calX": { "type": "slider", "value": 0, "text": "Calendar left / right", "min": 0, "max": 100, "step": 1 },
+  "calY": { "type": "slider", "value": 0, "text": "Calendar up / down", "min": 0, "max": 100, "step": 1 },
+  "calScale": { "type": "slider", "value": 100, "text": "Calendar size", "min": 50, "max": 250, "step": 5 },
+
+  "showSystem": { "type": "checkbox", "value": false, "text": "Show system ink (CPU, GPU, memory)" },
+  "sysX": { "type": "slider", "value": 100, "text": "System left / right", "min": 0, "max": 100, "step": 1 },
+  "sysY": { "type": "slider", "value": 100, "text": "System up / down", "min": 0, "max": 100, "step": 1 },
+  "sysScale": { "type": "slider", "value": 100, "text": "System size", "min": 50, "max": 250, "step": 5 },
+
+  "showTimer": { "type": "checkbox", "value": false, "text": "Show focus timer (click it on the desktop to start / pause)" },
+  "timerMinutes": { "type": "slider", "value": 25, "text": "Focus length (minutes)", "min": 5, "max": 90, "step": 5 },
+  "timerBreak": { "type": "slider", "value": 5, "text": "Break length (minutes)", "min": 1, "max": 30, "step": 1 },
+  "timerX": { "type": "slider", "value": 100, "text": "Timer left / right", "min": 0, "max": 100, "step": 1 },
+  "timerY": { "type": "slider", "value": 50, "text": "Timer up / down", "min": 0, "max": 100, "step": 1 },
+  "timerScale": { "type": "slider", "value": 100, "text": "Timer size", "min": 50, "max": 250, "step": 5 },
+
+  "showAlbum": { "type": "checkbox", "value": false, "text": "Show album art and track" },
+  "albumX": { "type": "slider", "value": 0, "text": "Album left / right", "min": 0, "max": 100, "step": 1 },
+  "albumY": { "type": "slider", "value": 100, "text": "Album up / down", "min": 0, "max": 100, "step": 1 },
+  "albumScale": { "type": "slider", "value": 100, "text": "Album size", "min": 50, "max": 250, "step": 5 },
+
+  "showWorld": { "type": "checkbox", "value": false, "text": "Show world clocks" },
+  "worldClocks": { "type": "textbox", "value": "Tokyo=Asia/Tokyo; London=Europe/London; New York=America/New_York", "text": "World clocks (Name=Time zone; …)" },
+  "worldX": { "type": "slider", "value": 50, "text": "World clocks left / right", "min": 0, "max": 100, "step": 1 },
+  "worldY": { "type": "slider", "value": 0, "text": "World clocks up / down", "min": 0, "max": 100, "step": 1 },
+  "worldScale": { "type": "slider", "value": 100, "text": "World clocks size", "min": 50, "max": 250, "step": 5 }
+}

@@ -1,0 +1,256 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Ronin: a free, open-source live wallpaper for Windows</title>
+<meta name="description" content="Snow, mist, embers, a music-reactive ink line and clickable desktop task boards. ~47 MB, ~1.4% CPU, 0% when covered. Free and public domain.">
+<meta property="og:title" content="Ronin: a free live wallpaper for Windows">
+<meta property="og:description" content="Does more than a wallpaper engine, uses a fraction of the memory. Free and open source.">
+<meta property="og:image" content="https://hikayoru.github.io/ronin-wallpaper/img/social.jpg">
+<meta name="theme-color" content="#0F1012">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@400;600&family=Cormorant+Garamond:ital,wght@0,400;0,600;1,400&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --ink: #0F1012; --stone: #1b1d21; --stone2: #2A2C30; --ash: #8A8D91; --bone: #D9D6CF;
+    --ember: #C9A24A; --glow: #F2C35B; --blood: #B3263B;
+    --serif: "Cormorant Garamond", Georgia, serif; --caps: "Cinzel", "Times New Roman", serif;
+  }
+  * { box-sizing: border-box; }
+  html { scroll-behavior: smooth; }
+  body { margin: 0; background: var(--ink); color: var(--bone); font: 400 20px/1.55 var(--serif); -webkit-font-smoothing: antialiased; font-variant-numeric: lining-nums; }
+  a { color: var(--glow); text-decoration: none; }
+  a:hover { text-decoration: underline; }
+  .wrap { max-width: 1120px; margin: 0 auto; padding: 0 28px; }
+
+  /* nav */
+  nav { position: sticky; top: 0; z-index: 10; background: rgba(15,16,18,.82); backdrop-filter: blur(10px); border-bottom: 1px solid rgba(201,162,74,.15); }
+  nav .wrap { display: flex; align-items: center; gap: 28px; height: 60px; }
+  .brand { font: 600 18px var(--caps); letter-spacing: .28em; color: var(--bone); display: flex; align-items: center; gap: 10px; }
+  .brand::before { content: ""; width: 10px; height: 10px; background: var(--ember); transform: rotate(45deg); box-shadow: 0 0 12px var(--glow); }
+  nav .links { margin-left: auto; display: flex; gap: 24px; font: 400 13px var(--caps); letter-spacing: .14em; }
+  nav .links a { color: var(--ash); }
+  nav .links a:hover { color: var(--bone); text-decoration: none; }
+
+  /* hero */
+  .hero { position: relative; min-height: 88vh; display: flex; align-items: center; overflow: hidden; }
+  .hero::before { content: ""; position: absolute; inset: 0; background: url(img/screenshot.jpg) center/cover; filter: brightness(.75); transform: scale(1.04); animation: breathe 18s ease-in-out infinite alternate; }
+  .hero::after { content: ""; position: absolute; inset: 0; background: linear-gradient(90deg, rgba(15,16,18,.92) 0%, rgba(15,16,18,.55) 45%, rgba(15,16,18,.1) 100%), linear-gradient(0deg, var(--ink) 0%, transparent 30%); }
+  @keyframes breathe { to { transform: scale(1.09); } }
+  #snow { position: absolute; inset: 0; width: 100%; height: 100%; z-index: 1; pointer-events: none; }
+  .hero .wrap { position: relative; z-index: 2; width: 100%; }
+  .kicker { font: 400 13px var(--caps); letter-spacing: .4em; color: var(--ember); }
+  h1 { font: 400 clamp(56px, 9vw, 112px)/1 var(--caps); letter-spacing: .12em; margin: 14px 0 18px; text-shadow: 0 4px 40px rgba(0,0,0,.6); }
+  .lede { font-size: clamp(21px, 2.2vw, 26px); max-width: 560px; color: var(--bone); margin: 0 0 34px; }
+  .lede em { color: var(--glow); font-style: italic; }
+  .cta { display: flex; flex-wrap: wrap; gap: 14px; align-items: center; }
+  .btn { display: inline-flex; align-items: center; gap: 10px; padding: 15px 28px; font: 600 14px var(--caps); letter-spacing: .16em; border: 1px solid var(--ember); color: var(--ink); background: linear-gradient(180deg, var(--glow), var(--ember)); box-shadow: 0 0 28px rgba(242,195,91,.25); transition: box-shadow .2s, transform .2s; }
+  .btn:hover { text-decoration: none; box-shadow: 0 0 40px rgba(242,195,91,.45); transform: translateY(-1px); }
+  .btn.ghost { background: transparent; color: var(--bone); box-shadow: none; border-color: rgba(217,214,207,.3); }
+  .btn.ghost:hover { border-color: var(--ember); }
+  .small { font-size: 16px; color: var(--ash); }
+
+  /* stats */
+  .stats { display: grid; grid-template-columns: repeat(4, 1fr); border-top: 1px solid rgba(201,162,74,.2); border-bottom: 1px solid rgba(201,162,74,.2); margin-top: -1px; }
+  .stat { padding: 34px 20px; text-align: center; border-right: 1px solid rgba(201,162,74,.12); }
+  .stat:last-child { border-right: 0; }
+  .stat b { display: block; font: 400 44px/1 var(--caps); color: var(--glow); }
+  .stat span { font: 400 12px var(--caps); letter-spacing: .2em; color: var(--ash); text-transform: uppercase; }
+
+  section { padding: 96px 0; }
+  h2 { font: 400 clamp(32px, 4vw, 44px)/1.15 var(--caps); letter-spacing: .1em; margin: 0 0 14px; }
+  .divider { display: flex; align-items: center; gap: 14px; margin: 0 0 36px; color: var(--ember); max-width: 300px; }
+  .divider::before, .divider::after { content: ""; flex: 1; height: 1px; background: linear-gradient(90deg, transparent, var(--ember), transparent); }
+  .divider i { width: 7px; height: 7px; border: 1px solid var(--ember); transform: rotate(45deg); }
+  .sub { color: var(--ash); max-width: 680px; margin: 0 0 44px; }
+
+  /* comparison */
+  table { width: 100%; border-collapse: collapse; font-size: 19px; }
+  th, td { text-align: left; padding: 15px 18px; border-bottom: 1px solid rgba(138,141,145,.15); vertical-align: top; }
+  thead th { font: 400 13px var(--caps); letter-spacing: .18em; color: var(--ash); border-bottom-color: rgba(201,162,74,.35); }
+  thead th.us { color: var(--glow); }
+  td:first-child { color: var(--ash); width: 30%; }
+  td.us { color: var(--bone); background: rgba(201,162,74,.06); font-weight: 600; }
+  td.us::before { content: "◆ "; color: var(--ember); font-size: 12px; vertical-align: 2px; }
+  .note { font-size: 16px; color: var(--ash); font-style: italic; margin-top: 18px; }
+
+  /* features */
+  .grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 1px; background: rgba(201,162,74,.14); border: 1px solid rgba(201,162,74,.14); }
+  .card { background: var(--ink); padding: 32px 28px; transition: background .25s; }
+  .card:hover { background: var(--stone); }
+  .card h3 { font: 600 16px var(--caps); letter-spacing: .14em; margin: 0 0 10px; color: var(--bone); display: flex; gap: 12px; align-items: center; }
+  .card h3 .ic { font-size: 22px; color: var(--ember); width: 26px; text-align: center; }
+  .card p { margin: 0; color: var(--ash); font-size: 18px; }
+  .card p b { color: var(--bone); font-weight: 600; }
+  kbd { font: 600 14px var(--caps); border: 1px solid rgba(201,162,74,.5); padding: 1px 6px; color: var(--glow); }
+
+  /* bonuses */
+  .bonus { display: grid; grid-template-columns: 1fr 1fr; gap: 22px 56px; }
+  .bonus div { padding-left: 22px; border-left: 2px solid var(--ember); }
+  .bonus h4 { font: 600 15px var(--caps); letter-spacing: .12em; margin: 0 0 4px; }
+  .bonus p { margin: 0; color: var(--ash); font-size: 18px; }
+
+  /* install */
+  .steps { counter-reset: s; display: grid; grid-template-columns: repeat(4, 1fr); gap: 22px; }
+  .step { counter-increment: s; background: var(--stone); padding: 28px 24px; border-top: 2px solid var(--ember); }
+  .step::before { content: counter(s, upper-roman); display: block; font: 400 28px var(--caps); color: var(--ember); margin-bottom: 8px; }
+  .step p { margin: 0; font-size: 18px; color: var(--bone); }
+  .step p span { color: var(--ash); }
+  code { font: 15px Consolas, monospace; background: rgba(42,44,48,.8); padding: 2px 6px; color: var(--glow); }
+
+  .quote { text-align: center; padding: 110px 0; background: radial-gradient(ellipse at center, rgba(201,162,74,.08), transparent 60%); }
+  .quote p { font: italic 400 clamp(26px, 3.2vw, 38px)/1.35 var(--serif); max-width: 800px; margin: 0 auto 18px; }
+  .quote span { font: 400 12px var(--caps); letter-spacing: .35em; color: var(--ember); }
+
+  footer { border-top: 1px solid rgba(201,162,74,.15); padding: 44px 0; color: var(--ash); font-size: 16px; }
+  footer .wrap { display: flex; flex-wrap: wrap; gap: 18px 36px; justify-content: space-between; }
+
+  @media (max-width: 900px) {
+    .grid { grid-template-columns: 1fr 1fr; } .steps { grid-template-columns: 1fr 1fr; } .stats { grid-template-columns: 1fr 1fr; }
+    .stat:nth-child(2) { border-right: 0; } .bonus { grid-template-columns: 1fr; } nav .links { display: none; }
+  }
+  @media (max-width: 600px) {
+    .grid, .steps { grid-template-columns: 1fr; } table { font-size: 16px; } th, td { padding: 11px 8px; }
+  }
+  @media (prefers-reduced-motion: reduce) { .hero::before { animation: none; } #snow { display: none; } }
+</style>
+</head>
+<body>
+
+<nav><div class="wrap">
+  <a class="brand" href="#">RONIN</a>
+  <div class="links">
+    <a href="#why">Why Ronin</a><a href="#features">Features</a><a href="#install">Install</a>
+    <a href="https://github.com/HikaYoru/ronin-wallpaper">Source</a>
+  </div>
+</div></nav>
+
+<header class="hero">
+  <canvas id="snow"></canvas>
+  <div class="wrap">
+    <div class="kicker">A LIVE WALLPAPER FOR WINDOWS</div>
+    <h1>RONIN</h1>
+    <p class="lede">Snow, mist and gold embers over your own art. A clock carved in serif, an ink line that moves with your music, and tasks you click right on the desktop. <em>Free, open source, and lighter than a single browser tab.</em></p>
+    <div class="cta">
+      <a class="btn" href="https://github.com/HikaYoru/ronin-wallpaper/releases/latest">◆ Download for Windows</a>
+      <a class="btn ghost" href="https://github.com/HikaYoru/ronin-wallpaper">View the source</a>
+    </div>
+    <p class="small" style="margin-top:18px">Windows 10 / 11 · 64-bit · no account, no store, no .NET install</p>
+  </div>
+</header>
+
+<div class="wrap stats">
+  <div class="stat"><b>~47 MB</b><span>memory while animating</span></div>
+  <div class="stat"><b>~1.4%</b><span>CPU at 60 fps</span></div>
+  <div class="stat"><b>0%</b><span>CPU when covered</span></div>
+  <div class="stat"><b>$0</b><span>forever · public domain</span></div>
+</div>
+
+<section id="why">
+  <div class="wrap">
+    <h2>WHY NOT A WALLPAPER ENGINE?</h2>
+    <div class="divider"><i></i></div>
+    <p class="sub">Wallpaper engines are built to run anything, so most of them run a whole web browser behind your icons. Ronin is built for one wallpaper and draws it straight on the GPU in one small process. It also does things they don't do at all.</p>
+    <table>
+      <thead><tr><th></th><th class="us">RONIN</th><th>TYPICAL WALLPAPER ENGINE</th></tr></thead>
+      <tbody>
+        <tr><td>Price</td><td class="us">Free, public domain</td><td>Paid, or free behind a store / account</td></tr>
+        <tr><td>Memory while animating</td><td class="us">~47 MB</td><td>~355–430 MB for this same wallpaper in Wallpaper Engine</td></tr>
+        <tr><td>CPU while animating</td><td class="us">~1.4 %</td><td>~5 %+ for web-based wallpapers</td></tr>
+        <tr><td>Processes</td><td class="us">1</td><td>5–7</td></tr>
+        <tr><td>While you game</td><td class="us">Covered screens stop at 0 %, others drop to 15 fps</td><td>Varies, often needs setting up</td></tr>
+        <tr><td>Clickable to-do list on the desktop</td><td class="us">Boards, statuses, notes, sub-tasks</td><td>No</td></tr>
+        <tr><td>One scene across all monitors</td><td class="us">Panorama, and weather that crosses the bezels</td><td>Usually one wallpaper per screen</td></tr>
+        <tr><td>Account, Steam or store</td><td class="us">None</td><td>Often required</td></tr>
+        <tr><td>Source code</td><td class="us">All of it, do anything with it</td><td>Closed</td></tr>
+      </tbody>
+    </table>
+    <p class="note">Measured on a 1920×1080 280 Hz monitor with an RTX 4060 (Task Manager "Memory"). Your numbers will differ, but the gap stays wide.</p>
+  </div>
+</section>
+
+<section id="features" style="background:linear-gradient(180deg,transparent,rgba(42,44,48,.25),transparent)">
+  <div class="wrap">
+    <h2>WHAT IT DOES</h2>
+    <div class="divider"><i></i></div>
+    <div class="grid">
+      <div class="card"><h3><span class="ic">❄&#xFE0E;</span>LIVING WEATHER</h3><p>Snow, rain, drifting mist, embers and lightning. Or turn on <b>your real local weather</b> (no API key) and it matches the sky outside.</p></div>
+      <div class="card"><h3><span class="ic">〰&#xFE0E;</span>MUSIC INK LINE</h3><p>A gold line along the bottom that dances to <b>whatever is playing</b> in any app, with auto-gain so it moves at any volume. Shows the track and album art too.</p></div>
+      <div class="card"><h3><span class="ic">◇&#xFE0E;</span>DESKTOP TASK BOARDS</h3><p>Boards per project, folding sections, three-state tasks, notes and sub-tasks, <b>clickable right on the wallpaper</b>. Icons and windows still get their clicks.</p></div>
+      <div class="card"><h3><span class="ic">⌨&#xFE0E;</span>TASK HUD</h3><p>Press <kbd>Ctrl</kbd>+<kbd>Alt</kbd>+<kbd>T</kbd> for a sticky note of your tasks <b>over any app</b>. Tick, add, switch boards, then Esc.</p></div>
+      <div class="card"><h3><span class="ic">✥&#xFE0E;</span>ARRANGE MODE</h3><p>Drag the clock, quote, tasks and widgets anywhere, <b>live</b>. Snapping, alignment guides, corner resizing, undo, and drop onto another monitor.</p></div>
+      <div class="card"><h3><span class="ic">⧉&#xFE0E;</span>BUILT FOR MULTI-MONITOR</h3><p><b>Every setting per screen</b>, monitor roles (Main / Side / Ambient), and a panorama that spans them all using their real positions.</p></div>
+      <div class="card"><h3><span class="ic">▣&#xFE0E;</span>WIDGETS</h3><p>Calendar from any <b>.ics</b> link (Google, Outlook, iCloud), CPU / GPU / RAM sparklines, a focus timer you click on the desktop, world clocks, album art.</p></div>
+      <div class="card"><h3><span class="ic">▶&#xFE0E;</span>YOUR BACKGROUNDS</h3><p>Images, <b>animated GIFs and looping videos</b>. Drop them in a folder and pick them in Settings. Each monitor can have its own.</p></div>
+      <div class="card"><h3><span class="ic">◷&#xFE0E;</span>SCHEDULED LAYOUTS</h3><p>Save arrangements as layouts and <b>switch by time of day</b>: a work layout on weekday mornings, a calm one at night.</p></div>
+    </div>
+  </div>
+</section>
+
+<section id="bonuses">
+  <div class="wrap">
+    <h2>THE LITTLE EXTRAS</h2>
+    <div class="divider"><i></i></div>
+    <div class="bonus">
+      <div><h4>AUTO-UPDATES</h4><p>Checks this GitHub page once a day. One click in the tray installs the new version and keeps your settings and images.</p></div>
+      <div><h4>WORKS IN OTHER ENGINES TOO</h4><p>The wallpaper is also a standard web wallpaper for Wallpaper Engine and Lively, if you'd rather use those.</p></div>
+      <div><h4>MATCHING THEMES</h4><p>Ronin colour schemes for Windows Terminal, Spotify (Spicetify), the Windhawk taskbar and Start menu, and your accent colour.</p></div>
+      <div><h4>SURVIVES EVERYTHING</h4><p>Explorer restarts, driver updates, monitors plugged in and out. It reattaches behind your icons by itself.</p></div>
+      <div><h4>TIME-OF-DAY LIGHT</h4><p>Dawn, day, dusk and night tint the scene and its glow. Film grain and a slow breathing zoom keep it alive.</p></div>
+      <div><h4>FULLY HACKABLE</h4><p>C# with Direct2D, plus the original HTML page as a second renderer. Fork it, rebrand it, sell it. No credit needed.</p></div>
+    </div>
+  </div>
+</section>
+
+<section class="quote">
+  <p>“The journey of a thousand miles begins with a single step.”</p>
+  <span>LAOZI</span>
+</section>
+
+<section id="install">
+  <div class="wrap">
+    <h2>INSTALL IN A MINUTE</h2>
+    <div class="divider"><i></i></div>
+    <div class="steps">
+      <div class="step"><p>Download <code>Ronin-x.y.z.zip</code> from <a href="https://github.com/HikaYoru/ronin-wallpaper/releases/latest">Releases</a>.</p></div>
+      <div class="step"><p>Unzip it somewhere permanent. <span>For example Documents\Ronin.</span></p></div>
+      <div class="step"><p>Run <code>Start Ronin.cmd</code>. <span>If Windows warns you, click More info → Run anyway (the app isn't code-signed).</span></p></div>
+      <div class="step"><p>Click the gold ◆ in the tray for settings. <span>Right-click → Start with Windows.</span></p></div>
+    </div>
+    <p class="note">Needs Windows 10 (2004+) or 11, 64-bit. The settings window uses the Edge WebView2 Runtime, which Windows 11 already has.</p>
+  </div>
+</section>
+
+<footer><div class="wrap">
+  <div><span class="brand" style="display:inline-flex">RONIN</span></div>
+  <div>Public domain (<a href="https://github.com/HikaYoru/ronin-wallpaper/blob/main/LICENSE">The Unlicense</a>) · fonts under the SIL Open Font License</div>
+  <div><a href="https://github.com/HikaYoru/ronin-wallpaper">GitHub</a> · <a href="https://github.com/HikaYoru/ronin-wallpaper/issues">Report a problem</a></div>
+</div></footer>
+
+<script>
+// a little of the wallpaper's own snow and embers over the hero
+(() => {
+  const c = document.getElementById('snow'), x = c.getContext('2d'); let w, h, dpr, flakes = [];
+  function size() { dpr = Math.min(devicePixelRatio || 1, 2); w = c.clientWidth; h = c.clientHeight; c.width = w * dpr; c.height = h * dpr; x.setTransform(dpr, 0, 0, dpr, 0, 0); }
+  function make(top) { const ember = Math.random() < .12; return { x: Math.random() * w, y: top ? -10 : Math.random() * h, r: ember ? 1 + Math.random() * 1.4 : .6 + Math.random() * 1.8, vy: ember ? -(.15 + Math.random() * .35) : .25 + Math.random() * .7, vx: (Math.random() - .5) * .3, ph: Math.random() * 6.28, ember }; }
+  size(); addEventListener('resize', size);
+  for (let i = 0; i < 140; i++) flakes.push(make(false));
+  let t = 0;
+  (function frame() {
+    t += .016; x.clearRect(0, 0, w, h);
+    for (const f of flakes) {
+      f.y += f.vy; f.x += f.vx + Math.sin(t + f.ph) * .25;
+      if (f.y > h + 10 || f.y < -20 || f.x < -20 || f.x > w + 20) Object.assign(f, make(true), f.ember ? { y: h + 5 } : {});
+      x.beginPath(); x.arc(f.x, f.y, f.r, 0, 6.283);
+      if (f.ember) { x.fillStyle = `rgba(242,195,91,${.5 + .4 * Math.sin(t * 3 + f.ph)})`; x.shadowColor = '#F2C35B'; x.shadowBlur = 8; }
+      else { x.fillStyle = 'rgba(217,214,207,.75)'; x.shadowBlur = 0; }
+      x.fill();
+    }
+    requestAnimationFrame(frame);
+  })();
+})();
+</script>
+</body>
+</html>
