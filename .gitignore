@@ -1,0 +1,16 @@
+# build output
+bin/
+obj/
+*.user
+.vs/
+
+# release zips go to GitHub Releases, not into the repo
+releases/
+Ronin-Wallpaper.zip
+
+# third-party art that can't be redistributed (your own local copy keeps working)
+ronin-wallpaper/images/throne.webp
+ronin-wallpaper/images/zz-*
+
+# personal files
+update-source.txt
