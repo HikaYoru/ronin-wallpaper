@@ -1,4 +1,4 @@
-﻿using System.Diagnostics;
+using System.Diagnostics;
 using System.Text.Json.Nodes;
 using Microsoft.Web.WebView2.Core;
 using Microsoft.Win32;
@@ -74,7 +74,7 @@ internal sealed partial class TrayApp : ApplicationContext, IArrangeHost
         menu.Opening += (_, _) => RefreshMenu();
         foreach (ToolStripItem i in menu.Items) i.ForeColor = InkRenderer.Text;
 
-        tray = new NotifyIcon { Icon = TrayIcons.App, Text = "Ronin", ContextMenuStrip = menu, Visible = true };
+        tray = new NotifyIcon { Icon = TrayIcons.Tray, Text = "Ronin", ContextMenuStrip = menu, Visible = true };
         tray.MouseClick += (_, e) => { if (e.Button == MouseButtons.Left) OpenSettings(); };
 
         frameTimer.Tick += (_, _) => Frame();
@@ -107,7 +107,11 @@ internal sealed partial class TrayApp : ApplicationContext, IArrangeHost
 
             audio = new AudioFeed();
             media = new MediaFeed(ui);
-            media.Changed += () => { foreach (var s in slots) s.View.SendTrack(media.Title, media.Artist); };
+            media.Changed += () =>
+            {
+                foreach (var s in slots) s.View.SendTrack(media.Title, media.Artist);
+                settingsForm?.SendTrack(media.Title, media.Artist);
+            };
             media.ArtChanged += () => { foreach (var s in slots) s.View.SendAlbumArt(media.Art); };
             _ = media.StartAsync();
 
@@ -325,7 +329,11 @@ internal sealed partial class TrayApp : ApplicationContext, IArrangeHost
         if (!slots.Any(s => !s.Paused)) return;
 
         var bins = audio?.NextBins();
-        if (bins != null) foreach (var s in slots) if (!s.Paused) s.View.SendAudio(bins);
+        if (bins != null)
+        {
+            foreach (var s in slots) if (!s.Paused) s.View.SendAudio(bins);
+            settingsForm?.SendAudio(bins); // the live preview in Settings
+        }
 
         // parallax: the page listens for mouse moves it can't receive under the icons
         if (Native.GetCursorPos(out var c))
@@ -432,7 +440,7 @@ internal sealed partial class TrayApp : ApplicationContext, IArrangeHost
         var monitors = new JsonArray();
         int n = 1;
         foreach (var s in Screen.AllScreens.OrderBy(s => s.Bounds.X).ThenBy(s => s.Bounds.Y))
-            monitors.Add(new JsonObject { ["id"] = Id(s), ["name"] = MonitorName(s, n++) });
+            monitors.Add(new JsonObject { ["id"] = Id(s), ["name"] = MonitorName(s, n++), ["w"] = s.Bounds.Width, ["h"] = s.Bounds.Height, ["primary"] = s.Primary, ["scale"] = Render.NativeWallpaper.DprFor(s) });
         return new JsonObject
         {
             ["schema"] = schema!.Root.DeepClone(),
@@ -458,6 +466,7 @@ internal sealed partial class TrayApp : ApplicationContext, IArrangeHost
                 ["layout"] = settings.CurrentLayout,
                 ["schedule"] = ScheduleJson(),
                 ["renderer"] = settings.Renderer,
+                ["track"] = media?.Title is { } title ? new JsonObject { ["Title"] = title, ["Artist"] = media.Artist ?? "" } : null,
                 ["startup"] = AppSettings.StartWithWindows,
                 ["version"] = Updater.Current.ToString(3),
                 ["updateSource"] = Updater.Source(settings),
@@ -481,7 +490,7 @@ internal sealed partial class TrayApp : ApplicationContext, IArrangeHost
         try
         {
             var e = await EnsureEnvAsync();
-            settingsForm = new SettingsForm(e, SettingsInit);
+            settingsForm = new SettingsForm(e, SettingsInit, schema.Folder);
             settingsForm.Message += OnSettingsMessage;
             settingsForm.FormClosed += (_, _) =>
             {
@@ -491,6 +500,9 @@ internal sealed partial class TrayApp : ApplicationContext, IArrangeHost
                 ReleaseBrowserIfIdle();
             };
             settingsForm.Show();
+            // RONIN_DEBUG_ADD=path;path: as if those files were dropped on the settings window
+            if (Environment.GetEnvironmentVariable("RONIN_DEBUG_ADD") is { Length: > 0 } add)
+                _ = AddBackgroundsAsync(add.Split(';', StringSplitOptions.RemoveEmptyEntries), null);
         }
         catch (Exception ex)
         {
@@ -567,6 +579,10 @@ internal sealed partial class TrayApp : ApplicationContext, IArrangeHost
                 else if (k == "checkNow") _ = CheckForUpdatesAsync(manual: true);
                 else if (k == "installUpdate") InstallUpdate();
                 else if (k == "import") ImportSettings();
+                // the background gallery (TrayApp.Backgrounds.cs)
+                else if (k == "addFiles") _ = AddBackgroundsAsync((m["paths"] as JsonArray ?? new()).Select(p => p!.GetValue<string>()).ToList(), m["target"] as JsonObject);
+                else if (k == "pickFiles") PickBackgrounds(m["target"] as JsonObject);
+                else if (k == "removeBackground") RemoveBackground(m["v"]?.GetValue<string>() ?? "");
                 else if (k == "layout") ApplyLayout(m["v"]!.GetValue<string>());
                 else if (k == "saveLayout") { SaveLayoutAs(); settingsForm?.SendInit(); }
                 else if (k == "schedule") { SetSchedule(m["v"]!.AsArray()); settingsForm?.SendInit(); }

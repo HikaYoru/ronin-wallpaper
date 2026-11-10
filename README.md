@@ -34,7 +34,7 @@ Snow, rain, mist and gold embers over your own art. A carved-serif clock, rotati
 - **Time-of-day lighting**: dawn, day, dusk and night tint the scene and its glow.
 - **Music ink line**: a gold line along the bottom that follows whatever is playing (any app, any output device), with automatic gain so it moves at any volume.
 - **Now playing**: track and artist from Spotify, browsers, media players. Album art as an optional widget.
-- **Your own backgrounds**: images, **animated GIFs** and **looping videos** (`.mp4 .mov .mkv .webm …`). Drop them in `ronin-wallpaper/images`.
+- **Your own backgrounds**: images, **animated GIFs** and **looping videos** (`.mp4 .mov .mkv .webm …`). **Drag them from Explorer onto the Settings window** (or click *Add files…*), pick from a thumbnail gallery, and see them in a **live preview** of the real wallpaper before you choose.
 - Film grain, vignette, slow "breathing" zoom and parallax.
 
 ### On the desktop

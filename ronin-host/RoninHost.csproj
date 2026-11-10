@@ -10,10 +10,12 @@
     <ImplicitUsings>enable</ImplicitUsings>
     <ApplicationHighDpiMode>PerMonitorV2</ApplicationHighDpiMode>
     <ApplicationManifest>app.manifest</ApplicationManifest>
+    <!-- the exe's own icon (Explorer, taskbar, Start menu); made by tools\make-icon.ps1 -->
+    <ApplicationIcon>ronin.ico</ApplicationIcon>
     <AssemblyName>RoninHost</AssemblyName>
     <RootNamespace>RoninHost</RootNamespace>
     <Product>Ronin Host</Product>
-    <Version>0.8.0</Version>
+    <Version>0.8.2</Version>
     <!-- smaller, steadier memory for a long-running background app -->
     <ServerGarbageCollector>false</ServerGarbageCollector>
     <ConcurrentGarbageCollection>false</ConcurrentGarbageCollection>
@@ -40,6 +42,8 @@
     <EmbeddedResource Include="extras.json" LogicalName="extras.json" />
     <!-- the widgets for the web renderer, injected into the original page next to the bridge -->
     <EmbeddedResource Include="web-widgets.js" LogicalName="web-widgets.js" />
+    <!-- the same icon for the windows and the tray, at every size -->
+    <EmbeddedResource Include="ronin.ico" LogicalName="ronin.ico" />
     <!-- the wallpaper's fonts for the native renderer (SIL Open Font License, see fonts\OFL-*.txt) -->
     <None Include="fonts\**" CopyToOutputDirectory="PreserveNewest" />
   </ItemGroup>

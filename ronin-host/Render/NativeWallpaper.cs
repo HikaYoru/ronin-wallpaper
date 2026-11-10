@@ -87,9 +87,12 @@ internal sealed class NativeWallpaper : Form, IWallpaperView
         Ready?.Invoke();
     }
 
-    float Dpr()
+    float Dpr() => DprFor(Screen);
+
+    /// <summary>A monitor's scale (1 = 100 %, 1.5 = 150 %).</summary>
+    public static float DprFor(Screen screen)
     {
-        var c = new POINT { X = Screen.Bounds.X + Screen.Bounds.Width / 2, Y = Screen.Bounds.Y + Screen.Bounds.Height / 2 };
+        var c = new POINT { X = screen.Bounds.X + screen.Bounds.Width / 2, Y = screen.Bounds.Y + screen.Bounds.Height / 2 };
         var mon = MonitorFromPoint(c, 2);
         return GetDpiForMonitor(mon, 0, out var dx, out _) == 0 && dx > 0 ? dx / 96f : 1f;
     }

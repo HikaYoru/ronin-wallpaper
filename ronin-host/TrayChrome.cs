@@ -59,11 +59,21 @@ internal sealed class InkRenderer : ToolStripProfessionalRenderer
     }
 }
 
-/// <summary>The app icon: a gold diamond on charcoal, drawn at runtime (no icon file needed).</summary>
+/// <summary>The app icon: a gold diamond on charcoal (ronin.ico, made by tools\make-icon.ps1; drawn here if it's missing).</summary>
 internal static class TrayIcons
 {
-    static Icon? app;
-    public static Icon App => app ??= Make(32);
+    static Icon? app, tray;
+    /// <summary>For windows: every size, so the title bar, taskbar and Alt+Tab each pick a sharp one.</summary>
+    public static Icon App => app ??= Load(null) ?? Make(32);
+    /// <summary>For the notification area: the small size for this DPI.</summary>
+    public static Icon Tray => tray ??= Load(SystemInformation.SmallIconSize) ?? Make(SystemInformation.SmallIconSize.Width);
+
+    static Icon? Load(Size? size)
+    {
+        using var s = typeof(TrayIcons).Assembly.GetManifestResourceStream("ronin.ico");
+        if (s == null) return null;
+        return size is { } z ? new Icon(s, z) : new Icon(s);
+    }
 
     static Icon Make(int size)
     {

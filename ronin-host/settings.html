@@ -86,6 +86,61 @@
   .days button.on { color: var(--bg); background: var(--gold); border-color: var(--gold); }
   .sched .x { margin-left: auto; } .sched .x:hover { color: var(--gold); border-color: var(--gold-dim); }
   .cell { display: flex; align-items: center; justify-content: space-between; gap: 8px; color: var(--dim); font-size: 12px; }
+
+  /* ---- live preview (the wallpaper page itself, scaled down) ---- */
+  #previewDock { margin: 6px 22px 0; background: var(--bg); }
+  #previewDock.pinned { position: sticky; top: 56px; z-index: 6; padding-bottom: 8px; box-shadow: 0 10px 18px -10px rgba(0,0,0,.9); }
+  .pv-head { display: flex; align-items: center; gap: 10px; padding: 4px 0 7px; }
+  .pv-head .lab { font: 11px var(--serif); letter-spacing: .32em; text-transform: uppercase; color: var(--gold); white-space: nowrap; }
+  .pv-head .lab::before { content: '◆'; font-size: 8px; margin-right: 8px; vertical-align: 2px; }
+  .pv-head .info { color: var(--dim); font-size: 11.5px; flex: 1; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .pv-head select { width: 190px; padding: 3px 6px; font-size: 12px; }
+  .mini { font: 10px var(--serif); letter-spacing: .18em; text-transform: uppercase; color: var(--dim); background: none;
+          border: 1px solid var(--line); padding: 4px 9px; cursor: pointer; white-space: nowrap; }
+  .mini:hover, .mini.on { color: var(--gold); border-color: var(--gold-dim); }
+  .pv-frame { position: relative; overflow: hidden; border: 1px solid #34302a; background: #0f1012; box-shadow: 0 10px 30px rgba(0,0,0,.55); }
+  .pv-frame iframe { position: absolute; left: 0; top: 0; border: 0; transform-origin: 0 0; pointer-events: none; }
+  .pv-tag { position: absolute; left: 10px; bottom: 9px; padding: 4px 9px; font: 10px var(--serif); letter-spacing: .2em; text-transform: uppercase;
+            color: var(--bg); background: var(--gold); opacity: 0; transition: opacity .15s; pointer-events: none; }
+  .pv-tag.show { opacity: 1; }
+  #previewDock.pinned .pv-frame { width: 58% !important; margin-left: auto; }
+  body.pv-pinned .editing { position: static; } /* the pinned preview takes the top */
+  #previewDock.collapsed .pv-frame { display: none; }
+
+  /* ---- background gallery ---- */
+  .gallery { display: grid; grid-template-columns: repeat(auto-fill, minmax(118px, 1fr)); gap: 8px; padding: 2px 0 6px; }
+  .tile { position: relative; aspect-ratio: 16 / 9; background: #0f1012; border: 1px solid var(--line); cursor: pointer; overflow: hidden; }
+  .tile img, .tile video { width: 100%; height: 100%; object-fit: cover; display: block; pointer-events: none; transition: transform .3s; }
+  .tile:hover img, .tile:hover video { transform: scale(1.05); }
+  .tile .nm { position: absolute; left: 0; right: 0; bottom: 0; padding: 12px 6px 3px; font-size: 10.5px; color: var(--text);
+              background: linear-gradient(transparent, rgba(0,0,0,.88)); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .tile .kind { position: absolute; top: 4px; left: 5px; font: 8.5px var(--serif); letter-spacing: .2em; color: var(--gold); background: rgba(0,0,0,.7); padding: 2px 5px; }
+  .tile .ph { position: absolute; inset: 0; display: flex; align-items: center; justify-content: center; color: var(--gold-dim); font-size: 22px; }
+  .tile.sel { border-color: var(--gold); box-shadow: 0 0 0 1px var(--gold), 0 0 16px rgba(201,162,74,.35); }
+  .tile.sel::after { content: '◆'; position: absolute; top: 3px; right: 6px; color: var(--gold); font-size: 11px; text-shadow: 0 0 6px #000; }
+  .tile .del { position: absolute; top: 3px; right: 3px; width: 20px; height: 20px; padding: 0; display: none; cursor: pointer;
+               border: 1px solid #3a3c40; background: rgba(20,22,24,.9); color: var(--dim); font-size: 11px; z-index: 2; }
+  .tile:hover .del { display: block; }
+  .tile.sel:hover::after { display: none; }
+  .tile .del:hover { color: #e57373; border-color: #7a3a3a; }
+  .tile.add { display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 5px; border: 1px dashed var(--gold-dim);
+              color: var(--gold); font: 10px var(--serif); letter-spacing: .2em; text-transform: uppercase; background: rgba(201,162,74,.04); text-align: center; }
+  .tile.add b { font: 300 24px/1 var(--body); }
+  .tile.add:hover { background: rgba(201,162,74,.12); }
+  .gal-note { color: var(--dim); font-size: 11.5px; padding: 0 0 4px; }
+  .notice { min-height: 18px; color: var(--gold); font-size: 11.5px; padding: 0 0 6px; }
+  .notice.busy::before { content: '◆'; display: inline-block; margin-right: 7px; animation: spin 1s linear infinite; }
+  @keyframes spin { to { transform: rotate(360deg); } }
+
+  /* ---- dragging files over the window ---- */
+  #dropHint { position: fixed; inset: 6px; z-index: 50; display: none; pointer-events: none; border: 2px dashed var(--gold);
+              background: rgba(201,162,74,.05); box-shadow: inset 0 0 60px rgba(201,162,74,.12); }
+  #dropHint div { position: absolute; left: 50%; top: 14px; transform: translateX(-50%); padding: 10px 18px; background: var(--bg);
+                  border: 1px solid var(--gold-dim); text-align: center; white-space: nowrap; }
+  #dropHint b { display: block; font: 600 13px var(--serif); letter-spacing: .3em; color: var(--gold); text-transform: uppercase; }
+  #dropHint span { color: var(--dim); font-size: 11.5px; }
+  body.dragging #dropHint { display: block; }
+  .card.droptarget { outline: 2px dashed var(--gold); outline-offset: 2px; background: #1f1c15; }
 </style>
 </head>
 <body>
@@ -95,7 +150,18 @@
   <button id="reset" title="Put every wallpaper setting back to its default">Reset</button>
 </header>
 <nav id="nav"></nav>
+<!-- outside #root so a refresh of the settings doesn't reload the preview -->
+<div id="previewDock">
+  <div class="pv-head">
+    <span class="lab">Live preview</span><span class="info" id="pvInfo"></span>
+    <span id="pvPick"></span>
+    <button class="mini" id="pvPin" title="Keep the preview on screen while you scroll through the settings">Pin</button>
+    <button class="mini" id="pvHide" title="Hide the preview (it stops running)">Hide</button>
+  </div>
+  <div class="pv-frame" id="pvFrame"><div class="pv-tag" id="pvTag"></div></div>
+</div>
 <div id="root"></div>
+<div id="dropHint"><div><b>Drop to add backgrounds</b><span>Pictures, GIFs and videos are copied into Ronin's images folder · drop on a monitor card to use it on that monitor only</span></div></div>
 
 <script>
 // Sections only group keys for display; labels, types and ranges all come from LivelyProperties.json.
@@ -124,11 +190,17 @@ const NOTES = {
 };
 
 const wv = window.chrome.webview;
-const send = m => wv.postMessage(m);
+// every change also goes straight to the preview, if it's for the monitor being previewed
+const send = m => { wv.postMessage(m); if (m.t === 'set' && (!m.mon || m.mon === previewMonitor())) previewProps({ [m.k]: m.v }); };
 const esc = s => String(s).replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
 let state = null;
 
-wv.addEventListener('message', e => { if (e.data && e.data.t === 'init') { state = e.data; render(); } });
+wv.addEventListener('message', e => {
+  const m = e.data || {};
+  if (m.t === 'init') { state = m; render(); }
+  else if (m.t === 'a' || m.t === 'm') toPreview(m); // music for the preview's ink line, the track name
+  else if (m.t === 'notice') showNotice(m.text, m.busy);
+});
 
 function section(title, id) {
   const s = document.createElement('section');
@@ -318,7 +390,7 @@ function render() {
       if (!def || def.type === 'button' || def.type === 'label') return;
       let r;
       const set = mon ? (v => { send({ t: 'set', k, v, mon }); markOverride(r, k, mon); }) : (v => send({ t: 'set', k, v }));
-      r = row(s, def.text || k, control(k, def, vals[k], set));
+      r = k === 'background' ? gallery(s, def, vals[k], set, mon) : row(s, def.text || k, control(k, def, vals[k], set));
       if (mon && (host.overrides[mon] || []).includes(k)) markOverride(r, k, mon);
       if (!mon) {
         const differ = Object.entries(host.overrides || {}).filter(([, ks]) => ks.includes(k)).map(([id]) => monName(id));
@@ -343,6 +415,7 @@ function render() {
       s.appendChild(n);
     }
   });
+  updatePreview();
 }
 
 // switch layouts by time of day: [layout] at [time] on [days]
@@ -395,13 +468,14 @@ function monitorCards(cards) {
   s.appendChild(note);
   cards.forEach(c => {
     const card = document.createElement('div'); card.className = 'card';
+    card.dataset.mon = c.id; // dropping files here uses them on this monitor only
     card.innerHTML = `<div class="card-h"><i></i>${esc(c.name)}</div>`;
     s.appendChild(card);
     const roles = [['shared', 'Shared settings'], ['main', 'Main'], ['side', 'Side'], ['ambient', 'Ambient']];
     if (c.role === 'custom') roles.push(['custom', 'Custom']);
     row(card, 'Role', selectBox(roles, c.role, v => { if (v !== 'custom') send({ t: 'mon', id: c.id, k: 'role', v }); }));
     const bg = [['', 'Shared background']].concat(files.map(f => [f, f.replace(/\.[^.]+$/, '')]));
-    const boards = [['', 'No task board']].concat((host.boards || []).map(b => [b.id, b.name]));
+    const boards = [['', 'No task board']].concat((state.host.boards || []).map(b => [b.id, b.name]));
     row(card, 'Task board', selectBox(boards, c.board || '', v => send({ t: 'mon', id: c.id, k: 'board', v })));
     row(card, 'Background', selectBox(bg, c.background || '', v => send({ t: 'mon', id: c.id, k: 'background', v })));
     const grid = document.createElement('div'); grid.className = 'grid';
@@ -414,6 +488,184 @@ function monitorCards(cards) {
     card.appendChild(grid);
   });
 }
+
+// ================= background gallery =================
+const PREVIEW = window.RONIN_PREVIEW || 'https://ronin-preview.local/'; // (overridable for testing the page in a browser)
+const VIDEO = /\.(mp4|m4v|mov|mkv|wmv|webm)$/i;
+const dropTarget = () => editing !== 'all' ? { mon: editing } : {};
+let current = ''; // the background the preview should show when nothing is hovered
+
+/// thumbnails of every background, an "Add files" tile, and a ✕ to move one to the Recycle Bin
+function gallery(parent, def, value, set, mon) {
+  const files = ((state.folders && state.folders.background) || []).slice();
+  const folder = (def.folder || 'images').replace(/\\/g, '/');
+  const add = document.createElement('button'); add.className = 'btn'; add.textContent = 'Add files…';
+  add.onclick = () => wv.postMessage({ t: 'host', k: 'pickFiles', target: dropTarget() });
+  const r = row(parent, def.text || 'Background', add);
+  const note = document.createElement('div'); note.className = 'gal-note';
+  note.textContent = (mon ? 'For ' + monName(mon) + ' only. ' : '') +
+    'Click to use · hover to preview · drag pictures, GIFs or videos from Explorer anywhere onto this window to add them.';
+  parent.appendChild(note);
+
+  const g = document.createElement('div'); g.className = 'gallery';
+  files.forEach(f => {
+    const t = document.createElement('div'); t.className = 'tile' + (f === value ? ' sel' : ''); t.title = f;
+    const src = PREVIEW + folder + '/' + encodeURIComponent(f);
+    let media;
+    if (VIDEO.test(f)) {
+      media = Object.assign(document.createElement('video'), { muted: true, preload: 'metadata', src: src + '#t=1' });
+      t.addEventListener('mouseenter', () => media.play().catch(() => {}));
+      t.addEventListener('mouseleave', () => media.pause());
+    } else media = Object.assign(document.createElement('img'), { loading: 'lazy', decoding: 'async', src });
+    media.onerror = () => { media.remove(); t.insertAdjacentHTML('afterbegin', `<div class="ph">${VIDEO.test(f) ? '▶' : '◇'}</div>`); };
+    t.appendChild(media);
+    const ext = (f.match(/\.([^.]+)$/) || [, ''])[1].toUpperCase();
+    if (VIDEO.test(f) || ext === 'GIF') t.insertAdjacentHTML('beforeend', `<span class="kind">${VIDEO.test(f) ? 'VIDEO' : 'GIF'}</span>`);
+    t.insertAdjacentHTML('beforeend', `<span class="nm">${esc(f.replace(/\.[^.]+$/, ''))}</span>`);
+    const del = document.createElement('button'); del.className = 'del'; del.textContent = '✕'; del.title = 'Move to the Recycle Bin';
+    del.onclick = e => { e.stopPropagation(); wv.postMessage({ t: 'host', k: 'removeBackground', v: f }); };
+    t.appendChild(del);
+    t.onclick = () => {
+      g.querySelectorAll('.tile.sel').forEach(x => x.classList.remove('sel'));
+      t.classList.add('sel'); current = f; set(f); pvTag('');
+    };
+    let hov;
+    t.addEventListener('mouseenter', () => { hov = setTimeout(() => { if (f !== current) { previewProps({ background: f }, true); pvTag('Preview: ' + f.replace(/\.[^.]+$/, '') + ' · click to use'); } }, 140); });
+    t.addEventListener('mouseleave', () => { clearTimeout(hov); previewProps({ background: current }, true); pvTag(''); });
+    g.appendChild(t);
+  });
+  const plus = document.createElement('div'); plus.className = 'tile add';
+  plus.innerHTML = '<b>+</b>Add files<br>or drop here';
+  plus.onclick = add.onclick;
+  g.appendChild(plus);
+  parent.appendChild(g);
+  const n = document.createElement('div'); n.className = 'notice'; n.id = 'galNotice';
+  if (lastNotice) { n.textContent = lastNotice.text; n.classList.toggle('busy', !!lastNotice.busy); }
+  parent.appendChild(n);
+  return r;
+}
+
+let lastNotice = null, noticeTimer;
+function showNotice(text, busy) {
+  lastNotice = text ? { text, busy } : null;
+  const n = document.getElementById('galNotice');
+  if (n) { n.textContent = text || ''; n.classList.toggle('busy', !!busy); }
+  clearTimeout(noticeTimer);
+  if (text && !busy) noticeTimer = setTimeout(() => showNotice(''), 7000);
+}
+
+// ---- drag and drop from Explorer: anywhere adds them; on a monitor card, for that monitor only ----
+let dragDepth = 0;
+const hasFiles = e => e.dataTransfer && [...e.dataTransfer.types].includes('Files');
+const cardAt = e => e.target && e.target.closest && e.target.closest('.card[data-mon]');
+document.addEventListener('dragenter', e => { if (!hasFiles(e)) return; e.preventDefault(); dragDepth++; document.body.classList.add('dragging'); });
+document.addEventListener('dragleave', e => { if (!hasFiles(e)) return; if (--dragDepth <= 0) { dragDepth = 0; document.body.classList.remove('dragging'); } });
+document.addEventListener('dragover', e => {
+  if (!hasFiles(e)) return;
+  e.preventDefault(); e.dataTransfer.dropEffect = 'copy';
+  const c = cardAt(e);
+  document.querySelectorAll('.card.droptarget').forEach(x => { if (x !== c) x.classList.remove('droptarget'); });
+  if (c) c.classList.add('droptarget');
+});
+document.addEventListener('drop', e => {
+  if (!hasFiles(e)) return;
+  e.preventDefault(); // otherwise the window would open the file
+  dragDepth = 0; document.body.classList.remove('dragging');
+  const c = cardAt(e);
+  document.querySelectorAll('.card.droptarget').forEach(x => x.classList.remove('droptarget'));
+  const files = e.dataTransfer.files;
+  if (!files.length) return;
+  wv.postMessageWithAdditionalObjects({ t: 'host', k: 'addFiles', target: c ? { card: c.dataset.mon } : dropTarget() }, files);
+});
+
+// ================= live preview =================
+// The real wallpaper page in an iframe at the monitor's own size, scaled to fit. It runs only while shown.
+let pvFrame = null, pvReady = false, pvPinned = false, pvHidden = false, pvChoice = '';
+const dock = document.getElementById('previewDock');
+
+function previewMonitor() {
+  if (!state) return '';
+  if (editing !== 'all') return editing;
+  const sel = state.host.selected || [];
+  if (pvChoice && sel.includes(pvChoice)) return pvChoice;
+  const mons = state.host.monitors || [];
+  return (mons.find(m => m.primary && sel.includes(m.id)) || mons.find(m => sel.includes(m.id)) || mons[0] || {}).id || '';
+}
+const previewValues = () => {
+  const id = previewMonitor();
+  return (state.host.monValues && state.host.monValues[id]) || state.values;
+};
+
+function toPreview(m) { if (pvFrame && pvReady) pvFrame.contentWindow.postMessage(m, '*'); }
+/// send settings to the preview; `temp` = hovering a thumbnail (not remembered)
+function previewProps(v, temp) { if (!temp && 'background' in v) current = v.background; toPreview({ t: 'p', v }); }
+function pvTag(text) { const t = document.getElementById('pvTag'); t.textContent = text; t.classList.toggle('show', !!text); }
+
+function updatePreview() {
+  if (!state) return;
+  const id = previewMonitor();
+  const m = (state.host.monitors || []).find(x => x.id === id) || { w: 1920, h: 1080, scale: 1, name: '' };
+  const vals = previewValues();
+  current = vals.background || '';
+  document.getElementById('pvInfo').textContent = (m.name || '').replace(/ — /, ' · ');
+  // with several monitors (and "All monitors" being edited) choose which one to preview
+  const pick = document.getElementById('pvPick'); pick.innerHTML = '';
+  const sel = (state.host.monitors || []).filter(x => (state.host.selected || []).includes(x.id));
+  if (editing === 'all' && sel.length > 1) {
+    const s = selectBox(sel.map(x => [x.id, x.name.replace(/ — .*/, '') + (x.primary ? ' (main)' : '')]), id, v => { pvChoice = v; updatePreview(); });
+    pick.appendChild(s);
+  }
+  document.getElementById('pvInfo').style.visibility = pick.childElementCount ? 'hidden' : '';
+  if (pvHidden) return;
+  const box = document.getElementById('pvFrame');
+  const w = Math.round(m.w / (m.scale || 1)), h = Math.round(m.h / (m.scale || 1));
+  if (!pvFrame) {
+    pvFrame = document.createElement('iframe');
+    pvFrame.src = PREVIEW + 'index.html';
+    pvReady = false;
+    box.appendChild(pvFrame);
+  }
+  pvFrame.style.width = w + 'px'; pvFrame.style.height = h + 'px';
+  pvFrame.dataset.w = w; pvFrame.dataset.h = h;
+  fitPreview();
+  if (pvReady) sendAllToPreview();
+}
+
+function sendAllToPreview() {
+  toPreview({ t: 'p', v: previewValues() });
+  const tr = state.host.track;
+  toPreview({ t: 'm', v: tr ? JSON.stringify(tr) : 'null' });
+  toPreview({ t: 'g', v: 30 }); // 30 fps is plenty for a small preview
+}
+
+function fitPreview() {
+  if (!pvFrame) return;
+  const box = document.getElementById('pvFrame');
+  const w = +pvFrame.dataset.w, h = +pvFrame.dataset.h;
+  const k = box.clientWidth / w;
+  pvFrame.style.transform = `scale(${k})`;
+  box.style.height = Math.round(h * k) + 'px';
+}
+new ResizeObserver(fitPreview).observe(document.getElementById('pvFrame'));
+
+window.addEventListener('message', e => {
+  if (pvFrame && e.source === pvFrame.contentWindow && e.data && e.data.t === 'previewReady') { pvReady = true; sendAllToPreview(); }
+});
+
+document.getElementById('pvPin').onclick = () => {
+  pvPinned = !pvPinned;
+  dock.classList.toggle('pinned', pvPinned);
+  document.body.classList.toggle('pv-pinned', pvPinned);
+  document.getElementById('pvPin').classList.toggle('on', pvPinned);
+  requestAnimationFrame(fitPreview);
+};
+document.getElementById('pvHide').onclick = () => {
+  pvHidden = !pvHidden;
+  dock.classList.toggle('collapsed', pvHidden);
+  document.getElementById('pvHide').textContent = pvHidden ? 'Show' : 'Hide';
+  if (pvHidden && pvFrame) { pvFrame.remove(); pvFrame = null; pvReady = false; } // stop it running
+  else updatePreview();
+};
 
 document.getElementById('reset').onclick = () => send({ t: 'reset' });
 </script>
